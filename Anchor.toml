@@ -2,14 +2,14 @@
 seeds = false
 skip-lint = false
 [programs.devnet]
-solana_program = "KKaUCEcxFjGRhbCU83rkS8rUQtVgKLKXC8oKnruBpFm"
+kyc_dao = "8Y7hXQY96Vovp3c1bnsbRvD6Vtp56oG37La1CVfaFBff"
 
 [registry]
-url = "https://api.apr.dev"
+url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "/home/guilherme/my-solana-wallet/arceuus.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/signatures/**/*.ts"
