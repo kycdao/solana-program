@@ -1,8 +1,8 @@
 import { Program, web3, workspace, BN } from '@project-serum/anchor'
-import idl from '../target/idl/minimal_mint.json'
-import { MY_WALLET, parsePrice } from '../utils'
-import { PREFIX, SUFIX } from '../constants'
-import { MinimalMint } from '../target/types/minimal_mint'
+import idl from '../target/idl/kyc_dao.json'
+import { MY_WALLET, parsePrice } from '../utils/utils'
+import { PREFIX, SUFIX } from '../utils/constants'
+import { KycDao } from '../target/types/kyc_dao'
 import { ethers } from 'ethers'
 import * as dotenv from 'dotenv'
 dotenv.config()
@@ -16,7 +16,7 @@ const main = async () => {
   )
   const eth_address = ethers.utils.computeAddress(eth_signer.publicKey).slice(2)
 
-  const program = workspace.MinimalMint as Program<MinimalMint>
+  const program = workspace.KycDao as Program<KycDao>
 
   const [candyMachine, bump] = await PublicKey.findProgramAddress(
     [Buffer.from(PREFIX), Buffer.from(SUFIX)],

@@ -10,7 +10,7 @@ pub mod error;
 pub mod state;
 pub mod verify_signature;
 
-declare_id!("HK3XFNQowgUiTcpF3hZgHQVLY7PPBpkJEcszEMSNRbSN");
+declare_id!("HdvMKawAov2R12ErgLhwMJeZQ36ZpLrdfcBNYhFSq9FZ");
 
 #[program]
 pub mod kyc_dao {
@@ -123,22 +123,67 @@ pub mod kyc_dao {
         /* set the metadata of the NFT */
         invoke_signed(
             &create_metadata_accounts(
-                *ctx.accounts.token_metadata_program.key,
-                *ctx.accounts.metadata.key,
-                *ctx.accounts.mint.key,
-                *ctx.accounts.mint_authority.key,
-                *ctx.accounts.mint_authority.key,
-                candy_machine.key(),
-                nft_name,
-                candy_machine.data.symbol.to_string(),
-                nft_uri,
-                Some(creators),
+                *ctx.accounts.token_metadata_program.key,   // Program ID
+                *ctx.accounts.metadata.key,                 // Metadata account
+                *ctx.accounts.mint.key,                     // Mint account
+                *ctx.accounts.mint_authority.key,           // Mint authority
+                *ctx.accounts.mint_authority.key,           // Payer
+                candy_machine.key(),                        // Update Authority
+                nft_name,                                   // Name
+                candy_machine.data.symbol.to_string(),      // Symbol
+                nft_uri,                                    // URI
+                Some(creators),                             // Creators
                 candy_machine.data.seller_fee_basis_points, // royalties percentage in basis point 500 = 5%
                 true,                                       // update auth is signer?
                 false,                                      // is mutable?
             ),
             metadata_infos.as_slice(),
             &[&authority_seeds],
+        )?;
+
+        /*
+         * The Mint may also contain a freeze_authority which can be used to issue
+         * FreezeAccount instructions that will render an Account unusable.
+         * Token instructions that include a frozen account will fail until the
+         * Account is thawed using the ThawAccount instruction. The SetAuthority
+         * instruction can be used to change a Mint's freeze_authority. If a Mint's
+         * freeze_authority is set to None then account freezing and thawing is
+         * permanently disabled and all currently frozen accounts will also stay
+         * frozen permanently.
+         *
+         * More info: https://spl.solana.com/token#freeze-authority
+         */
+
+        invoke(
+            &spl_token::instruction::freeze_account(
+                &ctx.accounts.token_program.key(),
+                &ctx.accounts.associated_account.key(),
+                &ctx.accounts.mint.key(),
+                &ctx.accounts.mint_authority.key(),
+                &[&ctx.accounts.mint_authority.key()],
+            )?,
+            &[
+                ctx.accounts.associated_account.clone(),
+                ctx.accounts.mint_authority.clone(),
+                ctx.accounts.mint.clone(),
+                ctx.accounts.token_program.clone(),
+            ],
+        )?;
+
+        invoke(
+            &spl_token::instruction::set_authority(
+                &ctx.accounts.token_program.key(),
+                &ctx.accounts.mint.key(),
+                None,
+                spl_token::instruction::AuthorityType::FreezeAccount,
+                &ctx.accounts.mint_authority.key(),
+                &[&ctx.accounts.mint_authority.key()],
+            )?,
+            &[
+                ctx.accounts.mint_authority.clone(),
+                ctx.accounts.mint.clone(),
+                ctx.accounts.token_program.clone(),
+            ],
         )?;
 
         /* at this point the NFT is already minted with the metadata */
