@@ -25,6 +25,9 @@ pub struct MintNFT<'info> {
     #[account(mut)]
     pub mint: AccountInfo<'info>,
     /// CHECK: This is not dangerous because we don't read or write from this account
+    #[account(mut)]
+    pub associated_account: AccountInfo<'info>,
+    /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(signer)]
     pub mint_authority: AccountInfo<'info>,
     /// CHECK: This is not dangerous because we don't read or write from this account
