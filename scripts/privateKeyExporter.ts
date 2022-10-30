@@ -25,7 +25,7 @@ async function main() {
     b.byteOffset,
     b.byteLength / Uint8Array.BYTES_PER_ELEMENT,
   )
-  fs.writeFileSync('tests/keypairs/exported-keypair.json', `[${j}]`)
+  fs.writeFileSync('/keypairs/exported-keypair.json', `[${j}]`)
 }
 
 main()
