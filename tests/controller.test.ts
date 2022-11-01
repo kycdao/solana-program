@@ -40,21 +40,21 @@ describe('tests', () => {
 
   /* Start by initializing the accounts that will hold state records  */
 
-  it('Should initialize Candy Machine', async () => {
-    try {
-      await initializeCandyMachine()
-    } catch (err) {
-      throw err
-    }
-  })
+  // it('Should initialize Candy Machine', async () => {
+  //   try {
+  //     await initializeCandyMachine()
+  //   } catch (err) {
+  //     throw err
+  //   }
+  // })
 
-  it('Should initialize State Machine', async () => {
-    try {
-      await initializeStateMachine()
-    } catch (err) {
-      throw err
-    }
-  })
+  // it('Should initialize State Machine', async () => {
+  //   try {
+  //     await initializeStateMachine()
+  //   } catch (err) {
+  //     throw err
+  //   }
+  // })
 
   // it('Should update the candy machine eth signer', async () => {
   //   try {
@@ -93,8 +93,8 @@ describe('tests', () => {
   //     )
 
   //     /* nft data */
-  //     const nftName = 'Marmold200'
-  //     const nftImage = 'https://api.amoebits.io/get/amoebits_200'
+  //     const nftName = 'Marmold777'
+  //     const nftImage = 'https://api.amoebits.io/get/amoebits_777'
   //     const {
   //       actual_message,
   //       signature,
@@ -114,12 +114,12 @@ describe('tests', () => {
   //           candyMachine,
   //           stateMachine,
   //           wallet: candyMachineState.wallet,
-  //           mint: mint.publicKey,
   //           metadata,
-  //           mintAuthority: MY_WALLET.publicKey,
+  //           mint: mint.publicKey,
   //           associatedAccount: associatedAccount, //try removindo after the double dots, see if it works
-  //           tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+  //           mintAuthority: MY_WALLET.publicKey,
   //           tokenProgram: TOKEN_PROGRAM_ID,
+  //           tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
   //           systemProgram: SystemProgram.programId,
   //           rent: SYSVAR_RENT_PUBKEY,
   //           ixSysvar: web3.SYSVAR_INSTRUCTIONS_PUBKEY,
@@ -214,8 +214,8 @@ describe('tests', () => {
   //     )
 
   //     /* nft data */
-  //     const nftName = 'Marmold201'
-  //     const nftImage = 'https://api.amoebits.io/get/amoebits_201'
+  //     const nftName = 'Marmold888'
+  //     const nftImage = 'https://api.amoebits.io/get/amoebits_888'
   //     const {
   //       actual_message,
   //       signature,
