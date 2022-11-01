@@ -32,6 +32,14 @@ anchor deploy --provider.cluster <DEVNET> --provider.wallet <KEYPAIR.JSON>
 anchor test
 ```
 
+You can also
+
+```
+anchor run test
+```
+
+to only run the typescript tests and not upgrade the program trough deploy
+
 ### Deploy to devnet: open state accounts, then mint
 
 To deploy both Candy and State Machine, must first create their account through context. Notice that there is commenting instructions for deploy and instructions order in the test file.
@@ -66,4 +74,10 @@ You can close programs to fetch you lamports rent back!
 
 ```
 solana program close <PROGRAM_ID>
+```
+
+### See all tokens and their status
+
+```
+spl-token accounts
 ```
