@@ -10,7 +10,7 @@ pub mod error;
 pub mod state;
 pub mod verify_signature;
 
-declare_id!("FXUrFs3xezL7pjkhrdRpem6w8ZYU5kJuFBqPGBJjKzJv");
+declare_id!("2LRcmbqHP5JiquTn97qow4kKzVQZMc1MXcph6VzHFu6R");
 
 #[program]
 pub mod kyc_dao {
@@ -228,7 +228,7 @@ pub mod kyc_dao {
     pub fn initialize_state_machine(ctx: Context<InitializeStateMachine>, _bump: u8) -> Result<()> {
         let state_machine = &mut ctx.accounts.state_machine;
 
-        msg!("state_machine initiated at pubkey {}", state_machine.key());
+        msg!("state_machine pubkey {}", state_machine.key());
         state_machine.authority = *ctx.accounts.authority.key;
 
         Ok(())
