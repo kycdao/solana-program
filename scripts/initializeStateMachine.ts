@@ -25,7 +25,7 @@ const main = async () => {
     },
     signers: [MY_WALLET],
   })
-  console.log('The transaction tx:', tx)
+  console.log('The transaction tx:\n', tx)
 }
 
 export default main
