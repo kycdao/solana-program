@@ -7,7 +7,7 @@ solana config get
 ```
 
 ### Switch between nets:
-`
+
 ```
 solana config set --url devnet
 solana config set --url localnet
@@ -28,7 +28,7 @@ To run the test, it must be first build; the first deploy should print the new p
 ```bash
 yarn
 anchor build
-anchor deploy --provider.cluster devnet --provider.wallet /home/guilherme/Documents/criptocode/Blockful/kycDAO/solana-program-current/utils/keypairs/my-wallet.json
+anchor deploy --provider.cluster <DEVNET> --provider.wallet <KEYPAIR.JSON>
 anchor test
 ```
 
