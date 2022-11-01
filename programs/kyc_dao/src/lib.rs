@@ -10,7 +10,7 @@ pub mod error;
 pub mod state;
 pub mod verify_signature;
 
-declare_id!("HdvMKawAov2R12ErgLhwMJeZQ36ZpLrdfcBNYhFSq9FZ");
+declare_id!("FXUrFs3xezL7pjkhrdRpem6w8ZYU5kJuFBqPGBJjKzJv");
 
 #[program]
 pub mod kyc_dao {
@@ -33,10 +33,11 @@ pub mod kyc_dao {
         nft_name: String,
         nft_uri: String,
     ) -> Result<()> {
-        /* Get what should be the Secp256k1Program instruction */
+        /* Signature */
+        /* get the Secp256k1Program instruction */
         let ix: Instruction = load_instruction_at_checked(0, &ctx.accounts.ix_sysvar)?;
 
-        /* Check that ix is what we expect to have been sent */
+        /* check that ix is what we expect to have been sent */
         verify_signature::verify_secp256k1_ix(
             &ix,
             &ctx.accounts.candy_machine.data.eth_signer,
@@ -45,20 +46,12 @@ pub mod kyc_dao {
             recovery_id,
         )?;
 
+        /* get the mutable context */
+        let state_machine = &mut ctx.accounts.state_machine;
         let candy_machine = &mut ctx.accounts.candy_machine;
-        let now = Clock::get()?.unix_timestamp;
 
-        if let Some(go_live_date) = candy_machine.data.go_live_date {
-            /* only the authority can mint before the launch date */
-            if now < go_live_date && *ctx.accounts.mint_authority.key != candy_machine.authority {
-                return Err(ErrorCode::CandyMachineNotLiveYet.into());
-            }
-        }
-
-        /* check if the payer (mint_authority) has enough SOL to pay the mint cost */
-        if ctx.accounts.mint_authority.lamports() < candy_machine.data.price {
-            return Err(ErrorCode::NotEnoughSOL.into());
-        }
+        /* increment the counter of total mints by 1 */
+        candy_machine.data.nfts_minted += 1;
 
         /* check if the collection still has NFTs to mint */
         if let Some(max_supply) = candy_machine.data.max_supply {
@@ -67,12 +60,24 @@ pub mod kyc_dao {
             }
         }
 
+        /* Flag */
+        /* set a bool flag for the token account */
+        state_machine.authority = candy_machine.authority.key();
+        state_machine.associated_account = *ctx.accounts.associated_account.key;
+        state_machine.data.is_valid = true;
+
+        /* Price */
+        /* check if the payer (mint_authority) has enough SOL to pay the mint cost */
+        if ctx.accounts.mint_authority.lamports() < candy_machine.data.price {
+            return Err(ErrorCode::NotEnoughSOL.into());
+        }
+
         /* pay fees - transfer money from the buyer to the treasury account */
         invoke(
             &system_instruction::transfer(
-                &ctx.accounts.mint_authority.key,
-                ctx.accounts.wallet.key,
-                candy_machine.data.price,
+                &ctx.accounts.mint_authority.key, // from
+                ctx.accounts.wallet.key,          // to
+                candy_machine.data.price,         // amount
             ),
             &[
                 ctx.accounts.mint_authority.clone(),
@@ -81,17 +86,21 @@ pub mod kyc_dao {
             ],
         )?;
 
-        /* increment the counter of total mints by 1 */
-        candy_machine.data.nfts_minted += 1;
-
         /* if you are confused about PDAs and why it is needed */
         /* please read this article: https://paulx.dev/blog/2021/01/14/programming-on-solana-an-introduction/#program-derived-addresses-pdas-part-1 */
         let (_pda_pubkey, bump) = Pubkey::find_program_address(
-            &[state::PREFIX.as_bytes(), state::SUFIX.as_bytes()],
+            &[
+                state::CANDY_PREFIX.as_bytes(),
+                state::CANDY_SUFIX.as_bytes(),
+            ],
             &self::id(),
         );
 
-        let authority_seeds = [state::PREFIX.as_bytes(), state::SUFIX.as_bytes(), &[bump]];
+        let authority_seeds = [
+            state::CANDY_PREFIX.as_bytes(),
+            state::CANDY_SUFIX.as_bytes(),
+            &[bump],
+        ];
 
         let mut creators: Vec<Creator> = vec![Creator {
             address: candy_machine.key(),
@@ -123,16 +132,16 @@ pub mod kyc_dao {
         /* set the metadata of the NFT */
         invoke_signed(
             &create_metadata_accounts(
-                *ctx.accounts.token_metadata_program.key,   // Program ID
-                *ctx.accounts.metadata.key,                 // Metadata account
-                *ctx.accounts.mint.key,                     // Mint account
-                *ctx.accounts.mint_authority.key,           // Mint authority
-                *ctx.accounts.mint_authority.key,           // Payer
-                candy_machine.key(),                        // Update Authority
-                nft_name,                                   // Name
-                candy_machine.data.symbol.to_string(),      // Symbol
-                nft_uri,                                    // URI
-                Some(creators),                             // Creators
+                *ctx.accounts.token_metadata_program.key,   // program id
+                *ctx.accounts.metadata.key,                 // metadata account
+                *ctx.accounts.mint.key,                     // mint account
+                *ctx.accounts.mint_authority.key,           // mint authority
+                *ctx.accounts.mint_authority.key,           // payer
+                candy_machine.key(),                        // update Authority
+                nft_name,                                   // name
+                candy_machine.data.symbol.to_string(),      // symbol
+                nft_uri,                                    // uRI
+                Some(creators),                             // creators
                 candy_machine.data.seller_fee_basis_points, // royalties percentage in basis point 500 = 5%
                 true,                                       // update auth is signer?
                 false,                                      // is mutable?
@@ -141,19 +150,8 @@ pub mod kyc_dao {
             &[&authority_seeds],
         )?;
 
-        /*
-         * The Mint may also contain a freeze_authority which can be used to issue
-         * FreezeAccount instructions that will render an Account unusable.
-         * Token instructions that include a frozen account will fail until the
-         * Account is thawed using the ThawAccount instruction. The SetAuthority
-         * instruction can be used to change a Mint's freeze_authority. If a Mint's
-         * freeze_authority is set to None then account freezing and thawing is
-         * permanently disabled and all currently frozen accounts will also stay
-         * frozen permanently.
-         *
-         * More info: https://spl.solana.com/token#freeze-authority
-         */
-
+        /* Soulbound */
+        /* freeze the token account */
         invoke(
             &spl_token::instruction::freeze_account(
                 &ctx.accounts.token_program.key(),
@@ -170,6 +168,7 @@ pub mod kyc_dao {
             ],
         )?;
 
+        /* set freeze authority to 'none' */
         invoke(
             &spl_token::instruction::set_authority(
                 &ctx.accounts.token_program.key(),
@@ -226,6 +225,30 @@ pub mod kyc_dao {
         Ok(())
     }
 
+    pub fn initialize_state_machine(ctx: Context<InitializeStateMachine>, _bump: u8) -> Result<()> {
+        let state_machine = &mut ctx.accounts.state_machine;
+
+        msg!("state_machine initiated at pubkey {}", state_machine.key());
+        state_machine.authority = *ctx.accounts.authority.key;
+
+        Ok(())
+    }
+
+    pub fn update_state_machine(
+        ctx: Context<UpdateStateMachine>,
+        is_valid: Option<bool>,
+    ) -> Result<()> {
+        let state_machine = &mut ctx.accounts.state_machine;
+
+        if let Some(v) = is_valid {
+            msg!("Update from {:?}", state_machine.data.is_valid);
+            msg!("Update to {}", v);
+            state_machine.data.is_valid = v;
+        }
+
+        Ok(())
+    }
+
     pub fn initialize_candy_machine(
         ctx: Context<InitializeCandyMachine>,
         _bump: u8,
@@ -233,43 +256,36 @@ pub mod kyc_dao {
     ) -> Result<()> {
         let candy_machine = &mut ctx.accounts.candy_machine;
 
-        msg!("pubkey {}", candy_machine.key());
-
-        candy_machine.data = data;
-        candy_machine.wallet = *ctx.accounts.wallet.key;
+        msg!("candy_machine pubkey {}", candy_machine.key());
         candy_machine.authority = *ctx.accounts.authority.key;
+        candy_machine.wallet = *ctx.accounts.wallet.key;
+        candy_machine.data = data;
 
         Ok(())
     }
 
     pub fn update_candy_machine(
         ctx: Context<UpdateCandyMachine>,
-        price: Option<u64>,
         eth_signer: Option<[u8; 20]>,
-        go_live_date: Option<i64>,
+        price: Option<u64>,
     ) -> Result<()> {
         let candy_machine = &mut ctx.accounts.candy_machine;
 
         if let Some(eth_s) = eth_signer {
-            msg!("Eth Signer changed to {:?}", candy_machine.data.eth_signer);
+            msg!(
+                "Eth Signer changed from {:?}",
+                candy_machine.data.eth_signer
+            );
             msg!("Eth Signer changed to {:?}", eth_s);
             candy_machine.data.eth_signer = eth_s;
         }
 
         if let Some(p) = price {
-            msg!("Price changed from {}", candy_machine.data.price);
+            msg!("Price changed from {:?}", candy_machine.data.price);
             msg!("Price changed to {}", p);
             candy_machine.data.price = p;
         };
 
-        if let Some(go_l) = go_live_date {
-            msg!("Go live date from {:#?}", candy_machine.data.go_live_date);
-            msg!("Go live date changed to {}", go_l);
-            candy_machine.data.go_live_date = Some(go_l);
-        };
-
         Ok(())
     }
-
-    /* TODO: Update signer */
 }

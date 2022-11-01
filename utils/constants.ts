@@ -16,14 +16,20 @@ export const TOKEN_PROGRAM_ID = new PublicKey(
 
 /* seeds of the PDA, can be anything you want */
 /* remember to change them on the contract too (state.rs file) */
-export const PREFIX = '0LZ3DI4S2B'
-export const SUFIX = '0LZ3DI4S2B'
+export const CANDY_PREFIX = '0LZ3DI4S2B'
+export const CANDY_SUFIX = '0LZ3DI4S2B'
+export const STATE_PREFIX = 'F96G8971BA36F5G4'
+export const STATE_SUFIX = 'F96G8971BA36F5G4'
 
 /* replace the following with your own pubkeys */
+export const stateMachine = new web3.PublicKey(
+  'AjLPryRTsozH6aZqo85cEkv8zstUaG4FHdPmzqjex3SB',
+)
+
 export const candyMachine = new web3.PublicKey(
-  '5FqxnL6HtvtyEv6ixRMxkZKzVVsQ9kGPSmmhavxN3g2',
+  '8xduydfc9eXkXwRVHRDSUPb7NTtdvTT5BHYYUzTi2rXz',
 )
 
 export const programId = new web3.PublicKey(
-  'HdvMKawAov2R12ErgLhwMJeZQ36ZpLrdfcBNYhFSq9FZ',
+  'FXUrFs3xezL7pjkhrdRpem6w8ZYU5kJuFBqPGBJjKzJv',
 )
