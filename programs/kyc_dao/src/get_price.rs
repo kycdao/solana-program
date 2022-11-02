@@ -10,7 +10,7 @@ pub struct GetPriceCtx<'info> {
     pub price_feed: UncheckedAccount<'info>,
 }
 
-pub fn handler(ctx: Context<GetPriceCtx>) -> Result<()> {
+pub fn get_price(ctx: Context<GetPriceCtx>) -> Result<()> {
     let price_account_info: AccountInfo = ctx.accounts.price_feed.to_account_info();
     let price_feed: PriceFeed = load_price_feed_from_account_info(&price_account_info).unwrap();
     let current_price: Price = price_feed.get_current_price().unwrap();

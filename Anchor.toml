@@ -2,7 +2,7 @@
 seeds = false
 skip-lint = false
 [programs.devnet]
-kyc_dao = "FXUrFs3xezL7pjkhrdRpem6w8ZYU5kJuFBqPGBJjKzJv"
+kyc_dao = "C49zAuWi2DMCv3YdXD3jnrmnnPmBLk211rRQ16KJJdtj"
 
 [registry]
 url = "https://anchor.projectserum.com"

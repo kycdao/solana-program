@@ -9,6 +9,13 @@ use {
 };
 
 #[derive(Accounts)]
+pub struct GetPriceCtx<'info> {
+    #[account(mut)]
+    /// CHECK: pyth oracle account
+    pub price_feed: UncheckedAccount<'info>,
+}
+
+#[derive(Accounts)]
 pub struct MintNFT<'info> {
     #[account(
         mut,

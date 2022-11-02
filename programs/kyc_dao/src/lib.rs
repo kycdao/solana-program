@@ -2,6 +2,7 @@ use {
     crate::{error::ErrorCode, state::CandyMachineData},
     anchor_lang::prelude::*,
     context::*,
+    pyth_sdk_solana::{load_price_feed_from_account_info, Price, PriceFeed},
     solana_program::instruction::Instruction,
     solana_program::sysvar::instructions::load_instruction_at_checked,
 };
@@ -10,7 +11,7 @@ pub mod error;
 pub mod state;
 pub mod verify_signature;
 
-declare_id!("2LRcmbqHP5JiquTn97qow4kKzVQZMc1MXcph6VzHFu6R");
+declare_id!("C49zAuWi2DMCv3YdXD3jnrmnnPmBLk211rRQ16KJJdtj");
 
 #[program]
 pub mod kyc_dao {
@@ -24,6 +25,20 @@ pub mod kyc_dao {
         instruction::{create_metadata_accounts, update_metadata_accounts},
         state::Creator,
     };
+
+    pub fn get_price(ctx: Context<GetPriceCtx>) -> Result<()> {
+        let price_account_info: AccountInfo = ctx.accounts.price_feed.to_account_info();
+        let price_feed: PriceFeed = load_price_feed_from_account_info(&price_account_info).unwrap();
+        let current_price: Price = price_feed.get_current_price().unwrap();
+        msg!(
+            "price: ({} +- {}) x 10^{}",
+            current_price.price,
+            current_price.conf,
+            current_price.expo
+        );
+
+        Ok(())
+    }
 
     pub fn mint_nft(
         ctx: Context<MintNFT>,

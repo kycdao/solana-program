@@ -56,6 +56,26 @@ describe('tests', () => {
   //   }
   // })
 
+  it('Should fetch the price', async () => {
+    try {
+      const program = workspace.KycDao as Program<KycDao>
+
+      const price = new PublicKey(
+        'J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix',
+      )
+
+      const tx = await program.rpc.getPrice({
+        accounts: {
+          priceFeed: price,
+        },
+        signers: [MY_WALLET],
+      })
+      console.log(tx)
+    } catch (err) {
+      throw err
+    }
+  })
+
   // it('Should update the candy machine eth signer', async () => {
   //   try {
   //     const ethAddress = '0x532DC3A96ec91D4741b1f0FeE8c41A4E2914C5B3'
