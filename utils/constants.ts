@@ -27,13 +27,13 @@ export const STATE_SUFIX = 'F96G8971BA36F5G4'
 
 /* replace the following with your own pubkeys */
 export const stateMachine = new web3.PublicKey(
-  '5CAuGTxJh5U5HW2uNj2552DHzZGFqf2AyHnqTwnYqdeA',
+  'KDGqCC5YCLqhoc6anLujvJthNgsQRkFsKPtEbc1SJ9E',
 )
 
 export const candyMachine = new web3.PublicKey(
-  '5rYk3ibo2kBb58rM1kdVdCCiTZxXJHG16b3DQFXNwBD5',
+  '9De39qF4wq9wNrUZayxZeCdP7ZR651XVMRXkoygxq6Q7',
 )
 
 export const programId = new web3.PublicKey(
-  '7fnAn3C71EaY5eajsB866AahmdmBUGddURbBaVwkLxW6',
+  'BbHYKRCkydNbXg5GoxPr4oroqpAQc3rZTdUcJeY2sKDm',
 )
