@@ -4,6 +4,7 @@ import { MY_WALLET, parsePrice } from '../utils/utils'
 import { CANDY_PREFIX, CANDY_SUFIX } from '../utils/constants'
 import { KycDao } from '../target/types/kyc_dao'
 import { ethers } from 'ethers'
+import getLogInluding from './getLogInluding'
 import * as dotenv from 'dotenv'
 dotenv.config()
 
@@ -49,6 +50,12 @@ const main = async () => {
     },
   )
   console.log('The transaction tx:\n', tx)
+
+  /* Fetch the public key generated after initialization */
+  const log = await getLogInluding('pubKey', program, tx)
+  const pubkey = log[0].events[0].split(' ')[5]
+  console.log('CandyMachine public key:\n', pubkey)
+  console.log('\n Change your pubkey in "src/utils/constants.ts"')
 }
 
 export default main
