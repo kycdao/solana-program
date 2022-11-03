@@ -12,7 +12,7 @@ pub mod error;
 pub mod state;
 pub mod verify_signature;
 
-declare_id!("7fnAn3C71EaY5eajsB866AahmdmBUGddURbBaVwkLxW6");
+declare_id!("BbHYKRCkydNbXg5GoxPr4oroqpAQc3rZTdUcJeY2sKDm");
 
 #[program]
 pub mod kyc_dao {
@@ -241,7 +241,7 @@ pub mod kyc_dao {
     pub fn initialize_state_machine(ctx: Context<InitializeStateMachine>, _bump: u8) -> Result<()> {
         let state_machine = &mut ctx.accounts.state_machine;
 
-        msg!("state_machine pubkey {}", state_machine.key());
+        msg!("KycDAO: StateMachine pubKey {}", state_machine.key());
         state_machine.authority = *ctx.accounts.authority.key;
 
         Ok(())
@@ -254,8 +254,11 @@ pub mod kyc_dao {
         let state_machine = &mut ctx.accounts.state_machine;
 
         if let Some(v) = is_valid {
-            msg!("Update from {:?}", state_machine.data.is_valid);
-            msg!("Update to {}", v);
+            msg!(
+                "KycDAO: Update from {:?} to {:?}",
+                state_machine.data.is_valid,
+                v
+            );
             state_machine.data.is_valid = v;
         }
 
@@ -269,7 +272,7 @@ pub mod kyc_dao {
     ) -> Result<()> {
         let candy_machine = &mut ctx.accounts.candy_machine;
 
-        msg!("candy_machine pubkey {}", candy_machine.key());
+        msg!("KycDAO: CandyMachine pubKey {}", candy_machine.key());
         candy_machine.authority = *ctx.accounts.authority.key;
         candy_machine.wallet = *ctx.accounts.wallet.key;
         candy_machine.data = data;
@@ -286,16 +289,19 @@ pub mod kyc_dao {
 
         if let Some(eth_s) = eth_signer {
             msg!(
-                "Eth Signer changed from {:?}",
-                candy_machine.data.eth_signer
+                "KycDAO: ETH Signer changed from {:?} to {:?}",
+                candy_machine.data.eth_signer,
+                eth_s
             );
-            msg!("Eth Signer changed to {:?}", eth_s);
             candy_machine.data.eth_signer = eth_s;
         }
 
         if let Some(p) = price {
-            msg!("Price changed from {:?}", candy_machine.data.price);
-            msg!("Price changed to {}", p);
+            msg!(
+                "KycDAO: Price changed from {:?} to {}",
+                candy_machine.data.price,
+                p
+            );
             candy_machine.data.price = p;
         };
 
