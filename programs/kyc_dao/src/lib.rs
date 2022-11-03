@@ -5,13 +5,14 @@ use {
     pyth_sdk_solana::{load_price_feed_from_account_info, Price, PriceFeed},
     solana_program::instruction::Instruction,
     solana_program::sysvar::instructions::load_instruction_at_checked,
+    solana_safe_math::SafeMath,
 };
 pub mod context;
 pub mod error;
 pub mod state;
 pub mod verify_signature;
 
-declare_id!("C49zAuWi2DMCv3YdXD3jnrmnnPmBLk211rRQ16KJJdtj");
+declare_id!("7fnAn3C71EaY5eajsB866AahmdmBUGddURbBaVwkLxW6");
 
 #[program]
 pub mod kyc_dao {
@@ -25,20 +26,7 @@ pub mod kyc_dao {
         instruction::{create_metadata_accounts, update_metadata_accounts},
         state::Creator,
     };
-
-    pub fn get_price(ctx: Context<GetPriceCtx>) -> Result<()> {
-        let price_account_info: AccountInfo = ctx.accounts.price_feed.to_account_info();
-        let price_feed: PriceFeed = load_price_feed_from_account_info(&price_account_info).unwrap();
-        let current_price: Price = price_feed.get_current_price().unwrap();
-        msg!(
-            "price: ({} +- {}) x 10^{}",
-            current_price.price,
-            current_price.conf,
-            current_price.expo
-        );
-
-        Ok(())
-    }
+    use solana_program::native_token::LAMPORTS_PER_SOL;
 
     pub fn mint_nft(
         ctx: Context<MintNFT>,
@@ -75,15 +63,25 @@ pub mod kyc_dao {
             }
         }
 
-        /* Flag */
+        /* Boolean isValid Flag */
         /* set a bool flag for the token account */
         state_machine.authority = candy_machine.authority.key();
         state_machine.associated_account = *ctx.accounts.associated_account.key;
         state_machine.data.is_valid = true;
 
         /* Price */
+        let price_account_info: AccountInfo = ctx.accounts.price_feed.to_account_info();
+        let price_feed: PriceFeed = load_price_feed_from_account_info(&price_account_info).unwrap();
+        let price_unwrap: Price = price_feed.get_current_price().unwrap();
+        let price_u64: u64 = price_unwrap.price.try_into().unwrap();
+        let price: u64 = candy_machine
+            .data
+            .price
+            .safe_div((price_u64 * 10000).safe_div(LAMPORTS_PER_SOL)?)?
+            * 1000;
+
         /* check if the payer (mint_authority) has enough SOL to pay the mint cost */
-        if ctx.accounts.mint_authority.lamports() < candy_machine.data.price {
+        if ctx.accounts.mint_authority.lamports() < price {
             return Err(ErrorCode::NotEnoughSOL.into());
         }
 
@@ -92,7 +90,7 @@ pub mod kyc_dao {
             &system_instruction::transfer(
                 &ctx.accounts.mint_authority.key, // from
                 ctx.accounts.wallet.key,          // to
-                candy_machine.data.price,         // amount
+                price,                            // amount
             ),
             &[
                 ctx.accounts.mint_authority.clone(),
@@ -165,6 +163,25 @@ pub mod kyc_dao {
             &[&authority_seeds],
         )?;
 
+        /* denote that the primary sale has happened */
+        /* and disable future updates to the NFT, so it is truly immutable */
+        invoke_signed(
+            &update_metadata_accounts(
+                *ctx.accounts.token_metadata_program.key,
+                *ctx.accounts.metadata.key,
+                candy_machine.key(),
+                None,
+                None,
+                Some(true),
+            ),
+            &[
+                ctx.accounts.token_metadata_program.clone(),
+                ctx.accounts.metadata.clone(),
+                candy_machine.to_account_info().clone(),
+            ],
+            &[&authority_seeds],
+        )?;
+
         /* Soulbound */
         /* freeze the token account */
         invoke(
@@ -216,25 +233,6 @@ pub mod kyc_dao {
                 ctx.accounts.mint.clone(),
                 ctx.accounts.token_program.clone(),
             ],
-        )?;
-
-        /* denote that the primary sale has happened */
-        /* and disable future updates to the NFT, so it is truly immutable */
-        invoke_signed(
-            &update_metadata_accounts(
-                *ctx.accounts.token_metadata_program.key,
-                *ctx.accounts.metadata.key,
-                candy_machine.key(),
-                None,
-                None,
-                Some(true),
-            ),
-            &[
-                ctx.accounts.token_metadata_program.clone(),
-                ctx.accounts.metadata.clone(),
-                candy_machine.to_account_info().clone(),
-            ],
-            &[&authority_seeds],
         )?;
 
         Ok(())

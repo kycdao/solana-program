@@ -9,13 +9,6 @@ use {
 };
 
 #[derive(Accounts)]
-pub struct GetPriceCtx<'info> {
-    #[account(mut)]
-    /// CHECK: pyth oracle account
-    pub price_feed: UncheckedAccount<'info>,
-}
-
-#[derive(Accounts)]
 pub struct MintNFT<'info> {
     #[account(
         mut,
@@ -39,6 +32,9 @@ pub struct MintNFT<'info> {
     /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(signer)]
     pub mint_authority: AccountInfo<'info>,
+    /// CHECK: pyth oracle account
+    #[account(mut)]
+    pub price_feed: UncheckedAccount<'info>,
     /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(address = spl_token::id())]
     pub token_program: AccountInfo<'info>,

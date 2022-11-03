@@ -17,6 +17,7 @@ import {
 } from '@solana/spl-token'
 import {
   TOKEN_METADATA_PROGRAM_ID,
+  PRICE_FEED,
   candyMachine,
   stateMachine,
 } from '../utils/constants'
@@ -39,7 +40,12 @@ describe('tests', () => {
   setProvider(AnchorProvider.env())
 
   /* Start by initializing the accounts that will hold state records  */
-
+  /* 
+  
+    Fetch pubkey and save in constants 
+    Some assertions
+  
+  */
   // it('Should initialize Candy Machine', async () => {
   //   try {
   //     await initializeCandyMachine()
@@ -56,30 +62,10 @@ describe('tests', () => {
   //   }
   // })
 
-  it('Should fetch the price', async () => {
-    try {
-      const program = workspace.KycDao as Program<KycDao>
-
-      const price = new PublicKey(
-        'J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix',
-      )
-
-      const tx = await program.rpc.getPrice({
-        accounts: {
-          priceFeed: price,
-        },
-        signers: [MY_WALLET],
-      })
-      console.log(tx)
-    } catch (err) {
-      throw err
-    }
-  })
-
   // it('Should update the candy machine eth signer', async () => {
   //   try {
   //     const ethAddress = '0x532DC3A96ec91D4741b1f0FeE8c41A4E2914C5B3'
-  //     const price = 0.7
+  //     const price = 5
   //     await updateCandyMachine(price)
   //   } catch (e) {
   //     throw e
@@ -90,126 +76,127 @@ describe('tests', () => {
    * comment the above and uncomment the below
    */
 
-  // it('Should mint a Soulbounded NFT', async () => {
-  //   try {
-  //     /* this is our lib.rs */
-  //     const program = workspace.KycDao as Program<KycDao>
+  it('Should mint a Soulbounded NFT', async () => {
+    try {
+      /* this is our lib.rs */
+      const program = workspace.KycDao as Program<KycDao>
 
-  //     /* this fetches the current candyMachine wallet to receive mint fees */
-  //     const candyMachineState = await program.account.candyMachine.fetch(
-  //       candyMachine,
-  //     )
+      /* this fetches the current candyMachine wallet to receive mint fees */
+      const candyMachineState = await program.account.candyMachine.fetch(
+        candyMachine,
+      )
 
-  //     /* mint authority will handle the mint session */
-  //     const mint = Keypair.generate()
-  //     const associatedAccount = await getTokenWallet(
-  //       MY_WALLET.publicKey,
-  //       mint.publicKey,
-  //     )
-  //     const metadata = await getMetadata(mint.publicKey)
+      /* mint authority will handle the mint session */
+      const mint = Keypair.generate()
+      const associatedAccount = await getTokenWallet(
+        MY_WALLET.publicKey,
+        mint.publicKey,
+      )
+      const metadata = await getMetadata(mint.publicKey)
 
-  //     const rent = await AnchorProvider.env().connection.getMinimumBalanceForRentExemption(
-  //       MintLayout.span,
-  //     )
+      const rent = await AnchorProvider.env().connection.getMinimumBalanceForRentExemption(
+        MintLayout.span,
+      )
 
-  //     /* nft data */
-  //     const nftName = 'Marmold777'
-  //     const nftImage = 'https://api.amoebits.io/get/amoebits_777'
-  //     const {
-  //       actual_message,
-  //       signature,
-  //       recoveryId,
-  //       eth_address,
-  //     } = await createSignature(nftName, nftImage)
+      /* nft data */
+      const nftName = 'Marmold666'
+      const nftImage = 'https://api.amoebits.io/get/amoebits_666'
+      const {
+        actual_message,
+        signature,
+        recoveryId,
+        eth_address,
+      } = await createSignature(nftName, nftImage)
 
-  //     /* nft mint */
-  //     const tx = await program.rpc.mintNft(
-  //       Buffer.from(actual_message),
-  //       Buffer.from(signature),
-  //       recoveryId,
-  //       nftName,
-  //       nftImage,
-  //       {
-  //         accounts: {
-  //           candyMachine,
-  //           stateMachine,
-  //           wallet: candyMachineState.wallet,
-  //           metadata,
-  //           mint: mint.publicKey,
-  //           associatedAccount: associatedAccount, //try removindo after the double dots, see if it works
-  //           mintAuthority: MY_WALLET.publicKey,
-  //           tokenProgram: TOKEN_PROGRAM_ID,
-  //           tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
-  //           systemProgram: SystemProgram.programId,
-  //           rent: SYSVAR_RENT_PUBKEY,
-  //           ixSysvar: web3.SYSVAR_INSTRUCTIONS_PUBKEY,
-  //         },
-  //         signers: [mint, MY_WALLET],
-  //         instructions: [
-  //           /* create a Secp256k1Program instruction on-chain*/
-  //           web3.Secp256k1Program.createInstructionWithEthAddress({
-  //             ethAddress: eth_address,
-  //             message: actual_message,
-  //             signature: signature,
-  //             recoveryId: recoveryId,
-  //           }),
-  //           /* create a token/mint account and pay the rent */
-  //           SystemProgram.createAccount({
-  //             fromPubkey: MY_WALLET.publicKey,
-  //             newAccountPubkey: mint.publicKey,
-  //             space: MintLayout.span,
-  //             lamports: rent,
-  //             programId: TOKEN_PROGRAM_ID,
-  //           }),
-  //           /* initialize the mint*/
-  //           createInitializeMintInstruction(
-  //             mint.publicKey,
-  //             0,
-  //             MY_WALLET.publicKey,
-  //             MY_WALLET.publicKey,
-  //             TOKEN_PROGRAM_ID,
-  //           ),
-  //           /* create an account that will hold the NFT */
-  //           createAssociatedTokenAccountInstruction(
-  //             associatedAccount,
-  //             MY_WALLET.publicKey,
-  //             MY_WALLET.publicKey,
-  //             mint.publicKey,
-  //           ),
-  //           /* mint 1 (and only) NFT to the mint account */
-  //           createMintToInstruction(
-  //             mint.publicKey,
-  //             associatedAccount,
-  //             MY_WALLET.publicKey,
-  //             1,
-  //             [],
-  //             TOKEN_PROGRAM_ID,
-  //           ),
-  //           // /* Can either be set in the contract or here */
-  //           // createFreezeAccountInstruction(
-  //           //   associatedAccount,
-  //           //   mint.publicKey,
-  //           //   MY_WALLET.publicKey,
-  //           //   [],
-  //           //   TOKEN_PROGRAM_ID,
-  //           // ),
-  //           // /* Set the authority of the FreezeAccount type to none */
-  //           // createSetAuthorityInstruction(
-  //           //   mint.publicKey,
-  //           //   MY_WALLET.publicKey,
-  //           //   AuthorityType.FreezeAccount,
-  //           //   null,
-  //           //   [],
-  //           //   TOKEN_PROGRAM_ID,
-  //           // ),
-  //         ],
-  //       },
-  //     )
-  //     console.log('Transaction signature:', tx)
-  //   } catch (e) {
-  //     throw e
-  //   }
-  // })
+      /* nft mint */
+      const tx = await program.rpc.mintNft(
+        Buffer.from(actual_message),
+        Buffer.from(signature),
+        recoveryId,
+        nftName,
+        nftImage,
+        {
+          accounts: {
+            candyMachine,
+            stateMachine,
+            wallet: candyMachineState.wallet,
+            metadata,
+            mint: mint.publicKey,
+            associatedAccount: associatedAccount, //try removindo after the double dots, see if it works
+            mintAuthority: MY_WALLET.publicKey,
+            priceFeed: PRICE_FEED,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+            rent: SYSVAR_RENT_PUBKEY,
+            ixSysvar: web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+          },
+          signers: [mint, MY_WALLET],
+          instructions: [
+            /* create a Secp256k1Program instruction on-chain*/
+            web3.Secp256k1Program.createInstructionWithEthAddress({
+              ethAddress: eth_address,
+              message: actual_message,
+              signature: signature,
+              recoveryId: recoveryId,
+            }),
+            /* create a token/mint account and pay the rent */
+            SystemProgram.createAccount({
+              fromPubkey: MY_WALLET.publicKey,
+              newAccountPubkey: mint.publicKey,
+              space: MintLayout.span,
+              lamports: rent,
+              programId: TOKEN_PROGRAM_ID,
+            }),
+            /* initialize the mint*/
+            createInitializeMintInstruction(
+              mint.publicKey,
+              0,
+              MY_WALLET.publicKey,
+              MY_WALLET.publicKey,
+              TOKEN_PROGRAM_ID,
+            ),
+            /* create an account that will hold the NFT */
+            createAssociatedTokenAccountInstruction(
+              associatedAccount,
+              MY_WALLET.publicKey,
+              MY_WALLET.publicKey,
+              mint.publicKey,
+            ),
+            /* mint 1 (and only) NFT to the mint account */
+            createMintToInstruction(
+              mint.publicKey,
+              associatedAccount,
+              MY_WALLET.publicKey,
+              1,
+              [],
+              TOKEN_PROGRAM_ID,
+            ),
+            // /* Can either be set in the contract or here */
+            // createFreezeAccountInstruction(
+            //   associatedAccount,
+            //   mint.publicKey,
+            //   MY_WALLET.publicKey,
+            //   [],
+            //   TOKEN_PROGRAM_ID,
+            // ),
+            // /* Set the authority of the FreezeAccount type to none */
+            // createSetAuthorityInstruction(
+            //   mint.publicKey,
+            //   MY_WALLET.publicKey,
+            //   AuthorityType.FreezeAccount,
+            //   null,
+            //   [],
+            //   TOKEN_PROGRAM_ID,
+            // ),
+          ],
+        },
+      )
+      console.log('Transaction signature:', tx)
+    } catch (e) {
+      throw e
+    }
+  })
 
   // it('Should mint a Soulbounded NFT and change the bool flag from true to false', async () => {
   //   try {
@@ -259,6 +246,7 @@ describe('tests', () => {
   //           mint: mint.publicKey,
   //           associatedAccount: associatedAccount, //try removindo after the double dots, see if it works
   //           mintAuthority: MY_WALLET.publicKey,
+  //           PRICE_FEED,
   //           tokenProgram: TOKEN_PROGRAM_ID,
   //           tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
   //           systemProgram: SystemProgram.programId,
