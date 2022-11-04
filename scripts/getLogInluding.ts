@@ -42,7 +42,7 @@ const getLogInluding = async <T extends anchor.Idl>(
   const events = transactions
     .map((tx) => {
       const logs = tx.meta?.logMessages
-
+      // const pat = tx.meta?.postTokenBalances ? tx.meta?.postTokenBalances : null
       const include = logs.reduce((acc, log) => {
         if (log.includes(inclusionString)) {
           acc.push(log)
@@ -54,6 +54,7 @@ const getLogInluding = async <T extends anchor.Idl>(
         ? {
             transaction: tx.transaction.signatures[0],
             timestamp: tx.blockTime,
+            postTokenBalances: tx.meta?.postTokenBalances,
             events: include,
           }
         : null
