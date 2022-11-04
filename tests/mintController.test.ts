@@ -42,8 +42,10 @@ const { Keypair, SystemProgram, PublicKey, SYSVAR_RENT_PUBKEY } = web3
 describe('tests', () => {
   setProvider(AnchorProvider.env())
 
-  /* Start by initializing the accounts that will hold state records  */
   /* 
+
+    Start by initializing the accounts that will hold state records
+
     The state machine and candy machine is initialized with a bump seed, which is used to
     calculate the program address. The state machine account is used to create
     store data of given accounts on-chain. The candy machine account is used to
@@ -52,6 +54,7 @@ describe('tests', () => {
     After both accounts are initialized, we can now mint tokens and manage their state.
     But first, we need to change both pubKeys returned from the initialization process
     in the 'constants.ts' file. So our mint can use their accounts as context.
+    
   */
 
   // it('Should initialize Candy Machine', async () => {

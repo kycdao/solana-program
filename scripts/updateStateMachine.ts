@@ -8,7 +8,7 @@ const main = async (associatedAccount: any, flag: boolean) => {
   /* lib */
   const program = new Program(idl as Idl, programId) as Program<KycDao>
 
-  const tx2 = await program.rpc.updateStateMachine(flag, {
+  const tx = await program.rpc.updateStateMachine(flag, {
     accounts: {
       stateMachine,
       associatedAccount,
@@ -16,7 +16,7 @@ const main = async (associatedAccount: any, flag: boolean) => {
     },
     signers: [MY_WALLET],
   })
-  console.log('Transaction signature:', tx2)
+  console.log('Transaction signature:', tx)
 }
 
 export default main
