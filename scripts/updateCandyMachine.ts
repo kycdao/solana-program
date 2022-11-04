@@ -37,6 +37,7 @@ const main = async (price: number, ethAddress?: string) => {
     },
   )
   console.log('Transaction signature:', tx)
+  return tx
 }
 
 export default main
