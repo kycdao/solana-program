@@ -265,6 +265,18 @@ pub mod kyc_dao {
         Ok(())
     }
 
+    pub fn get_state(ctx: Context<UpdateStateMachine>) -> Result<()> {
+        let state_machine = &mut ctx.accounts.state_machine;
+
+        msg!(
+            "KycDAO: Account {:?} has the {:?} state",
+            state_machine.associated_account.key(),
+            state_machine.data.is_valid,
+        );
+
+        Ok(())
+    }
+
     pub fn initialize_candy_machine(
         ctx: Context<InitializeCandyMachine>,
         _bump: u8,
