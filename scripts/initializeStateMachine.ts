@@ -26,7 +26,7 @@ const main = async () => {
     },
     signers: [MY_WALLET],
   })
-  console.log('The transaction tx:\n', tx)
+  console.log('\nThe transaction tx:\n', tx)
 
   /* Fetch the public key generated after initialization */
   const log = await getLogInluding('pubKey', program, tx)
