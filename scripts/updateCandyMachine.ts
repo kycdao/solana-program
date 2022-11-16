@@ -7,7 +7,7 @@ import { ethers } from 'ethers'
 import * as dotenv from 'dotenv'
 dotenv.config()
 
-const main = async (price: number, ethAddress?: string) => {
+const main = async (price: number, ethAddress?: string, signer?: any) => {
   /* workspace */
   const program = new Program(idl as Idl, programId) as Program<KycDao>
 
@@ -31,9 +31,9 @@ const main = async (price: number, ethAddress?: string) => {
     {
       accounts: {
         candyMachine,
-        authority: MY_WALLET.publicKey,
+        authority: signer ? signer.publicKey : MY_WALLET.publicKey,
       },
-      signers: [MY_WALLET],
+      signers: [signer ? signer : MY_WALLET],
     },
   )
   console.log('Transaction signature:', tx)

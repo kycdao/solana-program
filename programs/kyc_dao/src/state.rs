@@ -1,17 +1,12 @@
 use anchor_lang::prelude::*;
 
-/* state machine */
+/* state */
 
 #[account]
 #[derive(Default)]
-pub struct StateMachine {
+pub struct Data {
     pub authority: Pubkey,
     pub associated_account: Pubkey,
-    pub data: StateMachineData,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default, PartialEq)]
-pub struct StateMachineData {
     pub is_valid: bool,
 }
 

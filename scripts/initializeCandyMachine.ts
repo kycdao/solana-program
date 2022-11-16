@@ -49,6 +49,11 @@ const main = async () => {
       signers: [MY_WALLET],
     },
   )
+
+  if (!tx) {
+    return false
+  }
+
   console.log('\nThe transaction tx:\n', tx)
 
   /* Fetch the public key generated after initialization */
@@ -56,6 +61,8 @@ const main = async () => {
   const pubkey = log[0].events[0].split(' ')[5]
   console.log('CandyMachine public key:\n', pubkey)
   console.log('\n Change your pubkey in "src/utils/constants.ts"')
+
+  return true
 }
 
 export default main

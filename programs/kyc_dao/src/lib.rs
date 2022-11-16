@@ -12,7 +12,7 @@ pub mod error;
 pub mod state;
 pub mod verify_signature;
 
-declare_id!("BbHYKRCkydNbXg5GoxPr4oroqpAQc3rZTdUcJeY2sKDm");
+declare_id!("B5xbSCv92pd9soUGjGL4w3p3Qpeevq1dwuD53iVU5L8g");
 
 #[program]
 pub mod kyc_dao {
@@ -50,7 +50,6 @@ pub mod kyc_dao {
         )?;
 
         /* get the mutable context */
-        let state_machine = &mut ctx.accounts.state_machine;
         let candy_machine = &mut ctx.accounts.candy_machine;
 
         /* increment the counter of total mints by 1 */
@@ -63,12 +62,6 @@ pub mod kyc_dao {
             }
         }
 
-        /* Boolean isValid Flag */
-        /* set a bool flag for the token account */
-        state_machine.authority = candy_machine.authority.key();
-        state_machine.associated_account = *ctx.accounts.associated_account.key;
-        state_machine.data.is_valid = true;
-
         /* Price */
         let price_account_info: AccountInfo = ctx.accounts.price_feed.to_account_info();
         let price_feed: PriceFeed = load_price_feed_from_account_info(&price_account_info).unwrap();
@@ -78,7 +71,7 @@ pub mod kyc_dao {
             .data
             .price
             .safe_div((price_u64 * 10000).safe_div(LAMPORTS_PER_SOL)?)?
-            * 1000;
+            * 10000;
 
         /* check if the payer (mint_authority) has enough SOL to pay the mint cost */
         if ctx.accounts.mint_authority.lamports() < price {
@@ -238,42 +231,35 @@ pub mod kyc_dao {
         Ok(())
     }
 
-    pub fn initialize_state_machine(ctx: Context<InitializeStateMachine>, _bump: u8) -> Result<()> {
-        let state_machine = &mut ctx.accounts.state_machine;
+    pub fn initialize_state(ctx: Context<State>) -> Result<()> {
+        let authority = &mut ctx.accounts.authority;
+        let data = &mut ctx.accounts.data;
+        let candy_machine = &mut ctx.accounts.candy_machine;
 
-        msg!("KycDAO: StateMachine pubKey {}", state_machine.key());
-        state_machine.authority = *ctx.accounts.authority.key;
-
-        Ok(())
-    }
-
-    pub fn update_state_machine(
-        ctx: Context<UpdateStateMachine>,
-        is_valid: Option<bool>,
-    ) -> Result<()> {
-        let state_machine = &mut ctx.accounts.state_machine;
-
-        if let Some(v) = is_valid {
-            msg!(
-                "KycDAO: Update from {:?} to {:?}",
-                state_machine.data.is_valid,
-                v
-            );
-            state_machine.data.is_valid = v;
+        /* Only the owner can create states */
+        if authority.key() != candy_machine.wallet.key() {
+            return Err(ErrorCode::InvalidAuthority.into());
         }
 
+        data.authority = ctx.accounts.authority.key();
+        msg!("KycDAO: StateMachine pubKey {}", data.key());
         Ok(())
     }
 
-    pub fn get_state(ctx: Context<UpdateStateMachine>) -> Result<()> {
-        let state_machine = &mut ctx.accounts.state_machine;
-
+    pub fn set_data(
+        ctx: Context<SetData>,
+        is_valid: bool,
+        associated_account: Pubkey,
+    ) -> Result<()> {
+        let data = &mut ctx.accounts.data_acc;
         msg!(
-            "KycDAO: Account {:?} has the {:?} state",
-            state_machine.associated_account.key(),
-            state_machine.data.is_valid,
+            "KycDAO: State changed from {} to {} for account {}",
+            data.is_valid,
+            is_valid,
+            associated_account
         );
-
+        (*ctx.accounts.data_acc).is_valid = is_valid;
+        (*ctx.accounts.data_acc).associated_account = associated_account;
         Ok(())
     }
 
