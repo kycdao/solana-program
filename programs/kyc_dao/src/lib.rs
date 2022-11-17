@@ -12,7 +12,7 @@ pub mod error;
 pub mod state;
 pub mod verify_signature;
 
-declare_id!("B5xbSCv92pd9soUGjGL4w3p3Qpeevq1dwuD53iVU5L8g");
+declare_id!("ECKSABzSeSUsXEhQyBUJjinQrjNHAB4PVgYLqQupLtET");
 
 #[program]
 pub mod kyc_dao {
@@ -30,8 +30,8 @@ pub mod kyc_dao {
 
     pub fn mint_nft(
         ctx: Context<MintNFT>,
-        msg: Vec<u8>,
-        sig: [u8; 64],
+        msg: Option<Vec<u8>>,
+        sig: Option<[u8; 64]>,
         recovery_id: u8,
         nft_name: String,
         nft_uri: String,
@@ -41,13 +41,30 @@ pub mod kyc_dao {
         let ix: Instruction = load_instruction_at_checked(0, &ctx.accounts.ix_sysvar)?;
 
         /* check that ix is what we expect to have been sent */
-        verify_signature::verify_secp256k1_ix(
-            &ix,
-            &ctx.accounts.candy_machine.data.eth_signer,
-            &msg,
-            &sig,
-            recovery_id,
-        )?;
+        if let Some(msg_s) = msg {
+            if let Some(sig_s) = sig {
+                verify_signature::verify_secp256k1_ix(
+                    &ix,
+                    &ctx.accounts.candy_machine.data.eth_signer,
+                    &msg_s,
+                    &sig_s,
+                    recovery_id,
+                )?;
+            } else {
+                return Err(ErrorCode::SignatureVerificationFailed.into());
+            }
+        } else {
+            return Err(ErrorCode::SignatureVerificationFailed.into());
+        }
+
+        /* Apparently msg and sig must be options to be send as buffers */
+        // verify_signature::verify_secp256k1_ix(
+        //     &ix,
+        //     &ctx.accounts.candy_machine.data.eth_signer,
+        //     &msg,
+        //     &sig,
+        //     recovery_id,
+        // )?;
 
         /* get the mutable context */
         let candy_machine = &mut ctx.accounts.candy_machine;
@@ -73,20 +90,20 @@ pub mod kyc_dao {
             .safe_div((price_u64 * 10000).safe_div(LAMPORTS_PER_SOL)?)?
             * 10000;
 
-        /* check if the payer (mint_authority) has enough SOL to pay the mint cost */
-        if ctx.accounts.mint_authority.lamports() < price {
+        /* check if the payer (fee_payer) has enough SOL to pay the mint cost */
+        if ctx.accounts.fee_payer.lamports() < price {
             return Err(ErrorCode::NotEnoughSOL.into());
         }
 
         /* pay fees - transfer money from the buyer to the treasury account */
         invoke(
             &system_instruction::transfer(
-                &ctx.accounts.mint_authority.key, // from
-                ctx.accounts.wallet.key,          // to
-                price,                            // amount
+                &ctx.accounts.fee_payer.key, // from
+                ctx.accounts.wallet.key,     // to
+                price,                       // amount
             ),
             &[
-                ctx.accounts.mint_authority.clone(),
+                ctx.accounts.fee_payer.clone(),
                 ctx.accounts.wallet.clone(),
                 ctx.accounts.system_program.clone(),
             ],
@@ -127,7 +144,7 @@ pub mod kyc_dao {
             ctx.accounts.metadata.clone(),
             ctx.accounts.mint.clone(),
             ctx.accounts.mint_authority.clone(),
-            ctx.accounts.mint_authority.clone(),
+            ctx.accounts.fee_payer.clone(),
             ctx.accounts.token_metadata_program.clone(),
             ctx.accounts.token_program.clone(),
             ctx.accounts.system_program.clone(),
@@ -142,7 +159,7 @@ pub mod kyc_dao {
                 *ctx.accounts.metadata.key,                 // metadata account
                 *ctx.accounts.mint.key,                     // mint account
                 *ctx.accounts.mint_authority.key,           // mint authority
-                *ctx.accounts.mint_authority.key,           // payer
+                *ctx.accounts.fee_payer.key,                // payer
                 candy_machine.key(),                        // update Authority
                 nft_name,                                   // name
                 candy_machine.data.symbol.to_string(),      // symbol

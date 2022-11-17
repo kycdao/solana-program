@@ -25,8 +25,14 @@ pub struct MintNFT<'info> {
     #[account(mut)]
     pub associated_account: AccountInfo<'info>,
     /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(signer)]
+    #[account(mut)]
     pub mint_authority: AccountInfo<'info>,
+    /// CHECK: This is not dangerous because we don't read or write from this account
+    #[account(signer)]
+    pub fee_payer: AccountInfo<'info>,
+    /// CHECK: This is not dangerous because we don't read or write from this account
+    // #[account(signer)]
+    // pub payer: Signer<'info>,
     /// CHECK: pyth oracle account
     #[account(mut)]
     pub price_feed: UncheckedAccount<'info>,

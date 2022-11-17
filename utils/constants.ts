@@ -31,9 +31,9 @@ export const stateMachine = new web3.PublicKey(
 )
 
 export const candyMachine = new web3.PublicKey(
-  '4JDyLahfbY1zG9g3p8vggKdMQsnG74rsD88JaewDMyhy',
+  '2ffWF6NTk37DxBSsVA9zefJoCPcZZ8jCXywWDCm5M8Pf',
 )
 
 export const programId = new web3.PublicKey(
-  'B5xbSCv92pd9soUGjGL4w3p3Qpeevq1dwuD53iVU5L8g',
+  'ECKSABzSeSUsXEhQyBUJjinQrjNHAB4PVgYLqQupLtET',
 )
