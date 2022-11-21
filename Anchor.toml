@@ -2,14 +2,14 @@
 seeds = false
 skip-lint = false
 [programs.devnet]
-kyc_dao = "ECKSABzSeSUsXEhQyBUJjinQrjNHAB4PVgYLqQupLtET"
+kyc_dao = "8Rb6p5McbYhrYH6fBZNUxqndzGs9o2YkqFZ2paQZNror"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
 cluster = "devnet"
-wallet = "/home/guilherme/Documents/criptocode/Blockful/kycDAO/solana-program-current/utils/keypairs/my-wallet.json"
+wallet = "./utils/keypairs/my-wallet.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

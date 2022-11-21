@@ -76,14 +76,14 @@ describe('tests', () => {
     
   */
 
-  // it('Should initialize the Candy Machine', async () => {
-  //   try {
-  //     expect(await initializeCandyMachine()).to.be.equal(true)
-  //   } catch (err) {
-  //     throw err
-  //   }
-  // })
-
+//   it('Should initialize the Candy Machine', async () => {
+//     try {
+//       expect(await initializeCandyMachine()).to.be.equal(true)
+//     } catch (err) {
+//       throw err
+//     }
+//   })
+// })
   it('Should fail to initialize Candy Machine a second time', async () => {
     try {
       await initializeCandyMachine()
@@ -900,7 +900,7 @@ describe('tests', () => {
     } catch (err) {
       console.log(err.errorLogs[0])
       expect(err.errorLogs[0]).to.be.equal(
-        'Program log: AnchorError occurred. Error Code: SignatureVerificationFailed. Error Number: 6001. Error Message: The signature data provded to validate the metadata is incorrect.',
+        'Program log: AnchorError occurred. Error Code: SignatureVerificationFailed. Error Number: 6001. Error Message: The signature data provided to validate the metadata is incorrect.',
       )
     }
   })

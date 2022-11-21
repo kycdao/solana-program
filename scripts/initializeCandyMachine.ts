@@ -9,6 +9,8 @@ import * as dotenv from 'dotenv'
 dotenv.config()
 
 const main = async () => {
+  console.log('\nRunning init Candy Machine...\n')
+
   const { SystemProgram, PublicKey } = web3
 
   /* lib */
@@ -26,6 +28,8 @@ const main = async () => {
     [Buffer.from(CANDY_PREFIX), Buffer.from(CANDY_SUFIX)],
     new PublicKey(idl.metadata.address),
   )
+
+  console.log('\nStarting tx...\n')
 
   /* initialize candy machine */
   const tx = await program.rpc.initializeCandyMachine(

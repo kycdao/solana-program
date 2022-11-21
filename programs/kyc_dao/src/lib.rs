@@ -12,7 +12,7 @@ pub mod error;
 pub mod state;
 pub mod verify_signature;
 
-declare_id!("ECKSABzSeSUsXEhQyBUJjinQrjNHAB4PVgYLqQupLtET");
+declare_id!("8Rb6p5McbYhrYH6fBZNUxqndzGs9o2YkqFZ2paQZNror");
 
 #[program]
 pub mod kyc_dao {
