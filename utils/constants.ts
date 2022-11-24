@@ -20,20 +20,9 @@ export const PRICE_FEED = new PublicKey(
 
 /* seeds of the PDA, can be anything you want */
 /* remember to change them on the contract too (state.rs file) */
-export const CANDY_PREFIX = '0LZ3DI4S2B'
-export const CANDY_SUFIX = '0LZ3DI4S2C'
-export const STATE_PREFIX = 'F96G8971BA36F5G4'
-export const STATE_SUFIX = 'F96G8971BA36F5G4'
-
-/* replace the following with your own pubkeys */
-export const stateMachine = new web3.PublicKey(
-  'kycQhR65gFeRqt2EJCFZMtYkPomHrBYcRid7uiLpmEj',
-)
-
-export const candyMachine = new web3.PublicKey(
-  'BLKg6TWcpCPH24mNTH74q5QCUuS7db6w5bbo34Bh89Uy',
-)
+export const KYCDAO_COLLECTION_KYC_SEED = 'KYCDAO_COLLECTION_KYC_SEED_2'
+export const KYCDAO_STATUS_KYC_SEED = 'KYCDAO_STATUS_KYC_SEED'
 
 export const programId = new web3.PublicKey(
-  '8Rb6p5McbYhrYH6fBZNUxqndzGs9o2YkqFZ2paQZNror',
+  'CAA11798ETgBYZT5KBN1z7SMat76Wt9xE5RCxU5nX5Ft',
 )

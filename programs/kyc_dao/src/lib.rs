@@ -1,5 +1,5 @@
 use {
-    crate::{error::ErrorCode, state::CandyMachineData},
+    crate::{error::ErrorCode, state::*},
     anchor_lang::prelude::*,
     context::*,
     pyth_sdk_solana::{load_price_feed_from_account_info, Price, PriceFeed},
@@ -12,7 +12,7 @@ pub mod error;
 pub mod state;
 pub mod verify_signature;
 
-declare_id!("8Rb6p5McbYhrYH6fBZNUxqndzGs9o2YkqFZ2paQZNror");
+declare_id!("CAA11798ETgBYZT5KBN1z7SMat76Wt9xE5RCxU5nX5Ft");
 
 #[program]
 pub mod kyc_dao {
@@ -22,9 +22,9 @@ pub mod kyc_dao {
         program::{invoke, invoke_signed},
         system_instruction,
     };
-    use metaplex_token_metadata::{
-        instruction::{create_metadata_accounts, update_metadata_accounts},
-        state::Creator,
+    use mpl_token_metadata::{
+        instruction::{create_metadata_accounts_v3},
+        // state::Creator,
     };
     use solana_program::native_token::LAMPORTS_PER_SOL;
 
@@ -33,7 +33,7 @@ pub mod kyc_dao {
         msg: Option<Vec<u8>>,
         sig: Option<[u8; 64]>,
         recovery_id: u8,
-        nft_name: String,
+        // nft_name: String,
         nft_uri: String,
     ) -> Result<()> {
         /* Signature */
@@ -45,7 +45,7 @@ pub mod kyc_dao {
             if let Some(sig_s) = sig {
                 verify_signature::verify_secp256k1_ix(
                     &ix,
-                    &ctx.accounts.candy_machine.data.eth_signer,
+                    &ctx.accounts.collection.data.eth_signer,
                     &msg_s,
                     &sig_s,
                     recovery_id,
@@ -67,26 +67,36 @@ pub mod kyc_dao {
         // )?;
 
         /* get the mutable context */
-        let candy_machine = &mut ctx.accounts.candy_machine;
+        let kycdao_nft_collection = &mut ctx.accounts.collection;
 
         /* increment the counter of total mints by 1 */
-        candy_machine.data.nfts_minted += 1;
+        kycdao_nft_collection.data.nfts_minted += 1;
 
         /* check if the collection still has NFTs to mint */
-        if let Some(max_supply) = candy_machine.data.max_supply {
-            if candy_machine.data.nfts_minted >= max_supply {
-                return Err(ErrorCode::CandyMachineEmpty.into());
-            }
-        }
+        //TODO: No need to check max supply of NFTs
+        // if let Some(max_supply) = candy_machine.data.max_supply {
+        //     if candy_machine.data.nfts_minted >= max_supply {
+        //         return Err(ErrorCode::CandyMachineEmpty.into());
+        //     }
+        // }
+
+        //TODO: Add status handling after
+        // Set isValid to true here
+        let kycdao_nft_status = &mut ctx.accounts.status;
+        kycdao_nft_status.data.is_valid = true;
+
+        //TODO: Need to set expiry properly here, for now just check it's set correctly
+        kycdao_nft_status.data.expiry = 1;
 
         /* Price */
+        //TODO: Will need more complex expiry handling here, for now this is just doing one year
         let price_account_info: AccountInfo = ctx.accounts.price_feed.to_account_info();
         let price_feed: PriceFeed = load_price_feed_from_account_info(&price_account_info).unwrap();
         let price_unwrap: Price = price_feed.get_current_price().unwrap();
         let price_u64: u64 = price_unwrap.price.try_into().unwrap();
-        let price: u64 = candy_machine
+        let price: u64 = kycdao_nft_collection
             .data
-            .price
+            .price_per_year
             .safe_div((price_u64 * 10000).safe_div(LAMPORTS_PER_SOL)?)?
             * 10000;
 
@@ -98,9 +108,9 @@ pub mod kyc_dao {
         /* pay fees - transfer money from the buyer to the treasury account */
         invoke(
             &system_instruction::transfer(
-                &ctx.accounts.fee_payer.key, // from
-                ctx.accounts.wallet.key,     // to
-                price,                       // amount
+                &ctx.accounts.fee_payer.key,        // from
+                &ctx.accounts.wallet.key,           // to
+                price,                              // amount
             ),
             &[
                 ctx.accounts.fee_payer.clone(),
@@ -113,32 +123,31 @@ pub mod kyc_dao {
         /* please read this article: https://paulx.dev/blog/2021/01/14/programming-on-solana-an-introduction/#program-derived-addresses-pdas-part-1 */
         let (_pda_pubkey, bump) = Pubkey::find_program_address(
             &[
-                state::CANDY_PREFIX.as_bytes(),
-                state::CANDY_SUFIX.as_bytes(),
+                state::KYCDAO_COLLECTION_KYC_SEED.as_bytes(),
             ],
             &self::id(),
         );
 
         let authority_seeds = [
-            state::CANDY_PREFIX.as_bytes(),
-            state::CANDY_SUFIX.as_bytes(),
+            state::KYCDAO_COLLECTION_KYC_SEED.as_bytes(),
             &[bump],
         ];
 
-        let mut creators: Vec<Creator> = vec![Creator {
-            address: candy_machine.key(),
-            verified: true,
-            share: 0,
-        }];
+        //TODO: Don't think we need creators at all
+        // let mut creators: Vec<Creator> = vec![Creator {
+        //     address: candy_machine.key(),
+        //     verified: true,
+        //     share: 0,
+        // }];
 
-        /* add the creators that will receive royalties from secondary sales */
-        for c in &candy_machine.data.creators {
-            creators.push(Creator {
-                address: c.address,
-                verified: false,
-                share: c.share,
-            });
-        }
+        // /* add the creators that will receive royalties from secondary sales */
+        // for c in &candy_machine.data.creators {
+        //     creators.push(Creator {
+        //         address: c.address,
+        //         verified: false,
+        //         share: c.share,
+        //     });
+        // }
 
         let metadata_infos = vec![
             ctx.accounts.metadata.clone(),
@@ -149,25 +158,67 @@ pub mod kyc_dao {
             ctx.accounts.token_program.clone(),
             ctx.accounts.system_program.clone(),
             ctx.accounts.rent.to_account_info().clone(),
-            candy_machine.to_account_info().clone(),
+            kycdao_nft_collection.to_account_info().clone(),
+            // candy_machine.to_account_info().clone(),
         ];
+
+        // /* set the metadata of the NFT */
+        // invoke_signed(
+        //     &create_metadata_accounts(
+        //         *ctx.accounts.token_metadata_program.key,   // program id
+        //         *ctx.accounts.metadata.key,                 // metadata account
+        //         *ctx.accounts.mint.key,                     // mint account
+        //         *ctx.accounts.mint_authority.key,           // mint authority
+        //         *ctx.accounts.fee_payer.key,                // payer
+        //         candy_machine.key(),                        // update Authority
+        //         nft_name,                                   // name
+        //         candy_machine.data.symbol.to_string(),      // symbol
+        //         nft_uri,                                    // uRI
+        //         None,                                       // creators
+        //         candy_machine.data.seller_fee_basis_points, // royalties percentage in basis point 500 = 5%
+        //         true,                                       // update auth is signer?
+        //         false,                                      // is mutable?
+        //     ),
+        //     metadata_infos.as_slice(),
+        //     &[&authority_seeds],
+        // )?;
+
+        // program_id: Pubkey,
+        // metadata_account: Pubkey,
+        // mint: Pubkey,
+        // mint_authority: Pubkey,
+        // payer: Pubkey,
+        // update_authority: Pubkey,
+        // name: String,
+        // symbol: String,
+        // uri: String,
+        // creators: Option<Vec<Creator>>,
+        // seller_fee_basis_points: u16,
+        // update_authority_is_signer: bool,
+        // is_mutable: bool,
+        // collection: Option<Collection>,
+        // uses: Option<Uses>,
+        // collection_details: Option<CollectionDetails>,
 
         /* set the metadata of the NFT */
         invoke_signed(
-            &create_metadata_accounts(
-                *ctx.accounts.token_metadata_program.key,   // program id
-                *ctx.accounts.metadata.key,                 // metadata account
-                *ctx.accounts.mint.key,                     // mint account
-                *ctx.accounts.mint_authority.key,           // mint authority
-                *ctx.accounts.fee_payer.key,                // payer
-                candy_machine.key(),                        // update Authority
-                nft_name,                                   // name
-                candy_machine.data.symbol.to_string(),      // symbol
-                nft_uri,                                    // uRI
-                Some(creators),                             // creators
-                candy_machine.data.seller_fee_basis_points, // royalties percentage in basis point 500 = 5%
-                true,                                       // update auth is signer?
-                false,                                      // is mutable?
+            &create_metadata_accounts_v3(
+                *ctx.accounts.token_metadata_program.key,       // program id
+                *ctx.accounts.metadata.key,                     // metadata account
+                *ctx.accounts.mint.key,                         // mint account
+                *ctx.accounts.mint_authority.key,               // mint authority
+                *ctx.accounts.fee_payer.key,                    // payer
+                kycdao_nft_collection.key(),                    // update Authority
+                kycdao_nft_collection.data.name.to_string(),    // name
+                kycdao_nft_collection.data.symbol.to_string(),  // symbol
+                nft_uri,                                        // uRI
+                None,                                           // creators
+                0,                                              // royalties percentage in basis point 500 = 5%
+                true,                                           // update auth is signer?
+                true,                                           // is mutable?
+                None,                                           // collection
+                None,                                           // uses
+                None,                                           // collection details      
             ),
             metadata_infos.as_slice(),
             &[&authority_seeds],
@@ -175,22 +226,23 @@ pub mod kyc_dao {
 
         /* denote that the primary sale has happened */
         /* and disable future updates to the NFT, so it is truly immutable */
-        invoke_signed(
-            &update_metadata_accounts(
-                *ctx.accounts.token_metadata_program.key,
-                *ctx.accounts.metadata.key,
-                candy_machine.key(),
-                None,
-                None,
-                Some(true),
-            ),
-            &[
-                ctx.accounts.token_metadata_program.clone(),
-                ctx.accounts.metadata.clone(),
-                candy_machine.to_account_info().clone(),
-            ],
-            &[&authority_seeds],
-        )?;
+        //TODO: Don't want to prevent metadata updates
+        // invoke_signed(
+        //     &update_metadata_accounts(
+        //         *ctx.accounts.token_metadata_program.key,
+        //         *ctx.accounts.metadata.key,
+        //         candy_machine.key(),
+        //         None,
+        //         None,
+        //         Some(true),
+        //     ),
+        //     &[
+        //         ctx.accounts.token_metadata_program.clone(),
+        //         ctx.accounts.metadata.clone(),
+        //         candy_machine.to_account_info().clone(),
+        //     ],
+        //     &[&authority_seeds],
+        // )?;
 
         /* Soulbound */
         /* freeze the token account */
@@ -248,77 +300,60 @@ pub mod kyc_dao {
         Ok(())
     }
 
-    pub fn initialize_state(ctx: Context<State>) -> Result<()> {
-        let authority = &mut ctx.accounts.authority;
-        let data = &mut ctx.accounts.data;
-        let candy_machine = &mut ctx.accounts.candy_machine;
+    //TODO: Not sure how we're going to init status yet
+    // pub fn initialize_state(ctx: Context<State>) -> Result<()> {
+    //     let authority = &mut ctx.accounts.authority;
+    //     let data = &mut ctx.accounts.data;
+    //     let candy_machine = &mut ctx.accounts.candy_machine;
 
-        /* Only the owner can create states */
-        if authority.key() != candy_machine.wallet.key() {
-            return Err(ErrorCode::InvalidAuthority.into());
-        }
+    //     /* Only the owner can create states */
+    //     if authority.key() != candy_machine.wallet.key() {
+    //         return Err(ErrorCode::InvalidAuthority.into());
+    //     }
 
-        data.authority = ctx.accounts.authority.key();
-        msg!("KycDAO: StateMachine pubKey {}", data.key());
-        Ok(())
-    }
+    //     data.authority = ctx.accounts.authority.key();
+    //     msg!("KycDAO: StateMachine pubKey {}", data.key());
+    //     Ok(())
+    // }
 
-    pub fn set_data(
-        ctx: Context<SetData>,
-        is_valid: bool,
-        associated_account: Pubkey,
+    pub fn update_status(
+        ctx: Context<UpdateKycDAONFTStatus>,
+        // _bump: u8,
+        data: KycDaoNftStatusData,
     ) -> Result<()> {
-        let data = &mut ctx.accounts.data_acc;
-        msg!(
-            "KycDAO: State changed from {} to {} for account {}",
-            data.is_valid,
-            is_valid,
-            associated_account
-        );
-        (*ctx.accounts.data_acc).is_valid = is_valid;
-        (*ctx.accounts.data_acc).associated_account = associated_account;
+        let status = &mut ctx.accounts.status;
+        // msg!(
+        //     "KycDAO: State changed from {} to {}",
+        //     status.data,
+        //     data
+        // );
+        status.data = data;
         Ok(())
     }
 
-    pub fn initialize_candy_machine(
-        ctx: Context<InitializeCandyMachine>,
+    pub fn initialize_kycdaonft_collection(
+        ctx: Context<InitializeKycDAONFTCollection>,
         _bump: u8,
-        data: CandyMachineData,
+        data: KycDaoNftCollectionData,
     ) -> Result<()> {
-        let candy_machine = &mut ctx.accounts.candy_machine;
+        let kycdao_nft_collection = &mut ctx.accounts.kycdao_nft_collection;
 
-        msg!("KycDAO: CandyMachine pubKey {}", candy_machine.key());
-        candy_machine.authority = *ctx.accounts.authority.key;
-        candy_machine.wallet = *ctx.accounts.wallet.key;
-        candy_machine.data = data;
+        msg!("KycDAO: collection pubKey {}", kycdao_nft_collection.key());
+        kycdao_nft_collection.wallet = *ctx.accounts.wallet.key;
+        kycdao_nft_collection.authority = *ctx.accounts.authority.key;
+        kycdao_nft_collection.data = data;
 
         Ok(())
     }
 
-    pub fn update_candy_machine(
-        ctx: Context<UpdateCandyMachine>,
-        eth_signer: Option<[u8; 20]>,
-        price: Option<u64>,
+    pub fn update_kycdaonft_collection(
+        ctx: Context<UpdateKycDAONFTCollection>,
+        _bump: u8,
+        data: KycDaoNftCollectionData,
     ) -> Result<()> {
-        let candy_machine = &mut ctx.accounts.candy_machine;
-
-        if let Some(eth_s) = eth_signer {
-            msg!(
-                "KycDAO: ETH Signer changed from {:?} to {:?}",
-                candy_machine.data.eth_signer,
-                eth_s
-            );
-            candy_machine.data.eth_signer = eth_s;
-        }
-
-        if let Some(p) = price {
-            msg!(
-                "KycDAO: Price changed from {:?} to {}",
-                candy_machine.data.price,
-                p
-            );
-            candy_machine.data.price = p;
-        };
+        let kycdao_nft_collection = &mut ctx.accounts.kycdao_nft_collection;
+        kycdao_nft_collection.wallet = *ctx.accounts.wallet.key;
+        kycdao_nft_collection.data = data;
 
         Ok(())
     }

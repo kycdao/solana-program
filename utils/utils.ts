@@ -2,6 +2,9 @@ import { web3 } from '@project-serum/anchor'
 import {
   SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
   TOKEN_METADATA_PROGRAM_ID,
+  programId,
+  KYCDAO_COLLECTION_KYC_SEED,
+  KYCDAO_STATUS_KYC_SEED,
 } from './constants'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { LAMPORTS_PER_SOL } from '@solana/web3.js'
@@ -62,6 +65,26 @@ export const getTokenWallet = async (
       SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
     )
   )[0]
+}
+
+export const getStatusId = async (
+  mint: web3.PublicKey,
+) => {
+  return (
+    await web3.PublicKey.findProgramAddress(
+      [Buffer.from(KYCDAO_STATUS_KYC_SEED), mint.toBuffer()],
+      programId,
+    )
+  )[0]
+}
+
+export const getCollectionId = async () => {
+  return (
+    await web3.PublicKey.findProgramAddress(
+      [Buffer.from(KYCDAO_COLLECTION_KYC_SEED)],
+      programId,
+    )
+  )[0]    
 }
 
 export function parsePrice(price: number, mantissa: number = LAMPORTS_PER_SOL) {

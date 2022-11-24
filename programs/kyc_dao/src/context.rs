@@ -4,14 +4,35 @@ use crate::state::*;
 
 use {
     anchor_lang::{prelude::*, solana_program::system_program},
-    metaplex_token_metadata,
+    mpl_token_metadata,
     solana_program::sysvar::instructions::ID as IX_ID,
 };
 
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
-    #[account(mut, has_one = wallet)]
-    pub candy_machine: Account<'info, CandyMachine>,
+    #[account(
+        mut, 
+        has_one=wallet,
+        // seeds=[KYCDAO_COLLECTION_KYC_SEED.as_bytes()],
+        // bump,        
+    )]
+    pub collection: Account<'info, KycDaoNftCollection>,
+    //TODO: Need to look at status handling afterwards
+    // CHECK: This is not dangerous because we don't read or write from this account
+    #[account(
+        // mut,
+        // TODO: Need to enforce the seeds here
+        init, 
+        seeds=[KYCDAO_STATUS_KYC_SEED.as_bytes(), &mint.key.to_bytes()],
+        bump,
+        payer=fee_payer,
+        //TODO: Will need to revisit this space calc
+        space =
+            8  +  // < discriminator   
+            1  +  // < is_valid
+            8     // < expiry 
+    )]
+    pub status: Account<'info, KycDaoNftStatus>,    
     /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(mut)]
     pub wallet: AccountInfo<'info>,
@@ -28,7 +49,7 @@ pub struct MintNFT<'info> {
     #[account(mut)]
     pub mint_authority: AccountInfo<'info>,
     /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(signer)]
+    #[account(mut, signer)]
     pub fee_payer: AccountInfo<'info>,
     /// CHECK: This is not dangerous because we don't read or write from this account
     // #[account(signer)]
@@ -40,7 +61,7 @@ pub struct MintNFT<'info> {
     #[account(address = spl_token::id())]
     pub token_program: AccountInfo<'info>,
     /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(address = metaplex_token_metadata::id())]
+    #[account(address = mpl_token_metadata::id())]
     pub token_metadata_program: AccountInfo<'info>,
     /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(address = system_program::ID)]
@@ -54,11 +75,11 @@ pub struct MintNFT<'info> {
 /* derived account initialization */
 
 /*
-    The #[account(...)] macro enforces that our `candy_machine`
-    is owned by the currently executing program.
+    The #[account(...)] macro enforces that our `kycdao_nft_collection`
+    is owned by the currently executing program, as it's a PDA.
 
-    We mark `candy_machine` with the `init` attribute,
-    which creates a new account owned by the program
+    We marking an account with the `init` attribute,
+    creates a new account owned by the program
     When using `init`, we must also provide:
     `payer`, which funds the account creation
     and the `system_program` which is required by the runtime
@@ -68,45 +89,57 @@ pub struct MintNFT<'info> {
     Since we are only dealing with fixed-sized integers,
     we can leave out `space` and Anchor will calculate this for us automatically
 
-    `seeds` and `bump` tell us that our `candy_machine` is a PDA that can be derived from their respective values
-    Account<'info, VotingState> tells us that it should be deserialized to the VotingState struct defined below at #[account]
-
+    `seeds` and `bump` tell us that our `kycdao_nft_collection` is a PDA that can be derived from their respective values
 */
 
+//TODO: Don't think we want an init status instruction
+// #[derive(Accounts)]
+// pub struct InitializeKycDAONFTStatus<'info> {
+//     #[account(
+//         init, 
+//         payer = payer, 
+//         space =     8  +  // < discriminator (from Anchor?)
+//                     1  +  // < is_valid
+//                     32 +  // < authority
+//                     32    // < associated_account
+//     )]
+//     pub data: Account<'info, Data>,
+//     pub candy_machine: Account<'info, CandyMachine>,
+//     #[account(mut)]
+//     pub payer: Signer<'info>,
+//     /// CHECK: This is not dangerous because we don't read or write from this account
+//     pub authority: AccountInfo<'info>,
+//     pub system_program: Program<'info, System>
+// }
+
 #[derive(Accounts)]
-pub struct State<'info> {
-    #[account(
-        init, 
-        payer = payer, 
-        space =     8  +  // < discriminator
-                    1  +  // < is_valid
-                    32 +  // < authority
-                    32    // < associated_account
-    )]
-    pub data: Account<'info, Data>,
-    pub candy_machine: Account<'info, CandyMachine>,
-    #[account(mut)]
-    pub payer: Signer<'info>,
+// #[instruction(bump: u8, data: KycDaoNftStatusData)]
+pub struct UpdateKycDAONFTStatus<'info> {
+    //TODO: NEED to enforce that this is the intended collection here, can't store authority in status as we can't update ALL
     /// CHECK: This is not dangerous because we don't read or write from this account
+    #[account(
+        has_one = authority,
+        seeds=[KYCDAO_COLLECTION_KYC_SEED.as_bytes()],
+        bump,
+    )]
+    pub collection: Account<'info, KycDaoNftCollection>,
+    /// CHECK: This is not dangerous because we don't read or write from this account
+    #[account(mut)]
+    pub status: Account<'info, KycDaoNftStatus>,
+    /// CHECK: This is not dangerous because we don't read or write from this account
+    #[account(signer)]
     pub authority: AccountInfo<'info>,
-    pub system_program: Program<'info, System>
 }
 
 #[derive(Accounts)]
-pub struct SetData<'info> {
-    #[account(mut, has_one = authority)]
-    pub data_acc: Account<'info, Data>,
-    pub authority: Signer<'info>,
-}
-
-#[derive(Accounts)]
-#[instruction(bump: u8, data: CandyMachineData)]
-pub struct InitializeCandyMachine<'info> {
+#[instruction(bump: u8, data: KycDaoNftCollectionData)]
+pub struct InitializeKycDAONFTCollection<'info> {
     #[account(
         init,
-        seeds=[CANDY_PREFIX.as_bytes(), CANDY_SUFIX.as_bytes()],
+        seeds=[KYCDAO_COLLECTION_KYC_SEED.as_bytes()],
         payer = authority,
         bump,
+        //TODO: Need to check this space calc, probably use it dynamically
         space =
             8  +  // < discriminator
                   // \/ candy_machine
@@ -115,11 +148,13 @@ pub struct InitializeCandyMachine<'info> {
             32 +  // < authority
             32    // < extra - remove later
     )]
-    pub candy_machine: Account<'info, CandyMachine>,
+    pub kycdao_nft_collection: Account<'info, KycDaoNftCollection>,
     /// CHECK: This is not dangerous because we don't read or write from this account
+    /// TODO: Why do we need the constraint check on wallet here?
     #[account(constraint = wallet.data_is_empty() && wallet.lamports() > 0 )]
     pub wallet: AccountInfo<'info>,
     /// CHECK: This is not dangerous because we don't read or write from this account
+    /// TODO: Why do we need the constraint check on authority here?
     #[account(mut, signer, constraint= authority.data_is_empty() && authority.lamports() > 0)]
     pub authority: AccountInfo<'info>,
     /// CHECK: This is not dangerous because we don't read or write from this account
@@ -128,12 +163,19 @@ pub struct InitializeCandyMachine<'info> {
 }
 
 #[derive(Accounts)]
-pub struct UpdateCandyMachine<'info> {
+#[instruction(bump: u8, data: KycDaoNftCollectionData)]
+pub struct UpdateKycDAONFTCollection<'info> {
+    //TODO: We could limit this to only the intended collection by using seeds and bump
     #[account(
-        mut,
+        mut, 
         has_one = authority,
+        seeds=[KYCDAO_COLLECTION_KYC_SEED.as_bytes()],
+        bump
     )]
-    pub candy_machine: Account<'info, CandyMachine>,
+    pub kycdao_nft_collection: Account<'info, KycDaoNftCollection>,
+    /// CHECK: This is not dangerous because we don't read or write from this account
+    #[account()]
+    pub wallet: AccountInfo<'info>,    
     /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(signer)]
     pub authority: AccountInfo<'info>,

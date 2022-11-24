@@ -1,7 +1,7 @@
 import { Program, web3, workspace, BN } from '@project-serum/anchor'
 import idl from '../target/idl/kyc_dao.json'
 import { MY_WALLET, parsePrice } from '../utils/utils'
-import { CANDY_PREFIX, CANDY_SUFIX } from '../utils/constants'
+import { KYCDAO_COLLECTION_KYC_SEED } from '../utils/constants'
 import { KycDao } from '../target/types/kyc_dao'
 import { ethers } from 'ethers'
 import getLogInluding from './getLogInluding'
@@ -9,7 +9,7 @@ import * as dotenv from 'dotenv'
 dotenv.config()
 
 const main = async () => {
-  console.log('\nRunning init Candy Machine...\n')
+  console.log('\nRunning init KycDAO NFT Collection...\n')
 
   const { SystemProgram, PublicKey } = web3
 
@@ -24,28 +24,31 @@ const main = async () => {
   const eth_address = ethers.utils.computeAddress(eth_signer.publicKey).slice(2)
 
   /* calculates the program address using seeds from 'constants.ts'*/
-  const [candyMachine, bump] = await PublicKey.findProgramAddress(
-    [Buffer.from(CANDY_PREFIX), Buffer.from(CANDY_SUFIX)],
+  const [kycdaoNFTCollectionId, bump] = await PublicKey.findProgramAddress(
+    [Buffer.from(KYCDAO_COLLECTION_KYC_SEED)],
     new PublicKey(idl.metadata.address),
   )
 
   console.log('\nStarting tx...\n')
 
-  /* initialize candy machine */
-  const tx = await program.rpc.initializeCandyMachine(
+  /* initialize collection */
+  const tx = await program.rpc.initializeKycdaonftCollection(
     bump,
     {
       ethSigner: ethers.utils.arrayify('0x' + eth_address),
-      price: new BN(parsePrice(0.5)),
-      symbol: 'LLL',
-      sellerFeeBasisPoints: 500, // 500 = 5%
+      pricePerYear: new BN(parsePrice(0.5)),
       nftsMinted: new BN(0),
-      maxSupply: new BN(48),
-      creators: [{ address: MY_WALLET.publicKey, verified: true, share: 100 }],
+      symbol: 'KYC',
+      name: 'KYCDAO NFT',
+
+      // sellerFeeBasisPoints: 500, // 500 = 5%
+      // maxSupply: new BN(48),
+      // creators: [{ address: MY_WALLET.publicKey, verified: true, share: 100 }],
+      //TODO: Can we get a type for the collection here?
     } as any,
     {
       accounts: {
-        candyMachine,
+        kycdaoNftCollection: kycdaoNFTCollectionId,
         wallet: MY_WALLET.publicKey, // who will receive the SOL of each mint
         authority: MY_WALLET.publicKey,
         systemProgram: SystemProgram.programId,
@@ -60,11 +63,12 @@ const main = async () => {
 
   console.log('\nThe transaction tx:\n', tx)
 
-  /* Fetch the public key generated after initialization */
-  const log = await getLogInluding('pubKey', program, tx)
-  const pubkey = log[0].events[0].split(' ')[5]
-  console.log('CandyMachine public key:\n', pubkey)
-  console.log('\n Change your pubkey in "src/utils/constants.ts"')
+  // Fetch data from the new account
+  const kycdaoNFTCollectionState = await program.account.kycDaoNftCollection.fetch(
+    kycdaoNFTCollectionId,
+  )
+
+  console.log('\nThe kycdaoNFTCollectionState:\n', kycdaoNFTCollectionState)
 
   return true
 }
