@@ -40,6 +40,7 @@ const main = async () => {
       nftsMinted: new BN(0),
       symbol: 'KYC',
       name: 'KYCDAO NFT',
+      baseUrl: 'https://ipfs.io/ipfs/',
 
       // sellerFeeBasisPoints: 500, // 500 = 5%
       // maxSupply: new BN(48),

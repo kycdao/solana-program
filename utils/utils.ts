@@ -5,6 +5,7 @@ import {
   programId,
   KYCDAO_COLLECTION_KYC_SEED,
   KYCDAO_STATUS_KYC_SEED,
+  KYCDAO_AUTHMINT_KYC_SEED,
 } from './constants'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { LAMPORTS_PER_SOL } from '@solana/web3.js'
@@ -85,6 +86,17 @@ export const getCollectionId = async () => {
       programId,
     )
   )[0]    
+}
+
+export const getAuthMintId = async (
+  tokenAcct: web3.PublicKey,
+) => {
+  return (
+    await web3.PublicKey.findProgramAddress(
+      [Buffer.from(KYCDAO_AUTHMINT_KYC_SEED), tokenAcct.toBuffer()],
+      programId,
+    )
+  )[0]
 }
 
 export function parsePrice(price: number, mantissa: number = LAMPORTS_PER_SOL) {

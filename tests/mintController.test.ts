@@ -35,6 +35,7 @@ import {
   getCollectionId,
   getStatusId,
   getMetadata,
+  getAuthMintId,
   getTokenWallet,
   MY_WALLET,
   RECEIVER_WALLET,
@@ -88,14 +89,13 @@ describe('tests', () => {
     }    
   }),
 
-it('Should mint a Soulbounded NFT with another account paying for the fees', async () => {
+it('Should mint a Soulbounded NFT with via authMint', async () => {
   try {
     /* this is our lib.rs */
     const program = workspace.KycDao as Program<KycDao>
 
     const collectionId = await getCollectionId()
 
-    /* this fetches the current candyMachine wallet to receive mint fees */
     const kycDaoNftCollectionState = await program.account.kycDaoNftCollection.fetch(
       collectionId,
     )
@@ -113,19 +113,9 @@ it('Should mint a Soulbounded NFT with another account paying for the fees', asy
       MintLayout.span,
     )
 
-    /* nft data */
-    const nftName = 'Marmold666'
-    const nftImage = 'https://api.amoebits.io/get/amoebits_666'
-    const {
-      actual_message,
-      signature,
-      recoveryId,
-      eth_address,
-    } = await createSignature(nftName, nftImage)
-
     /* Prepare accounts */
     let transaction = new Transaction().add(
-      /* create a token/mint account and pay the rent */
+      /* create a mint account and pay the rent */
       SystemProgram.createAccount({
         fromPubkey: RECEIVER_WALLET.publicKey,
         newAccountPubkey: mint.publicKey,
@@ -141,7 +131,7 @@ it('Should mint a Soulbounded NFT with another account paying for the fees', asy
         MY_WALLET.publicKey,
         TOKEN_PROGRAM_ID,
       ),
-      /* create an account that will hold the NFT */
+      /* create a token account that will hold the NFT */
       createAssociatedTokenAccountInstruction(
         associatedAccount,
         RECEIVER_WALLET.publicKey,
@@ -168,9 +158,40 @@ it('Should mint a Soulbounded NFT with another account paying for the fees', asy
     )
     console.log(tx)
 
+    // Run the authMint
+    const authMintId = await getAuthMintId(associatedAccount)
+
+    transaction = await program.methods
+      .initializeKycdaonftAuthmint(
+        {
+          expiry: new BN(1),
+          secondsToPay: new BN(1),
+          metadataCid: 'QmUDyt1mZEMUMLQ1PQj7UnYvo9phLLG6j3TKV7AvW6P4u6',
+          verificationTier: 'one',
+        })
+      .accounts({
+        associatedAccount: associatedAccount,
+        kycdaoNftAuthmint: authMintId,
+        collection: collectionId,
+        authority: MY_WALLET.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([MY_WALLET])
+      .transaction()
+    transaction.feePayer = MY_WALLET.publicKey
+
+    console.log('running tx for auth mint...')
+    tx = await sendAndConfirmTransaction(
+      AnchorProvider.env().connection,
+      transaction,
+      [MY_WALLET],
+    )
+    console.log(tx)
+
     const reqAccts = {
       collection: collectionId,
       status: statusId,
+      kycdaoNftAuthmint: authMintId,
       wallet: kycDaoNftCollectionState.wallet,
       metadata: metadata,
       mint: mint.publicKey,
@@ -189,24 +210,9 @@ it('Should mint a Soulbounded NFT with another account paying for the fees', asy
 
     /* mintNFT */
     transaction = await program.methods
-      .mintNft(
-        Buffer.from(actual_message),
-        Buffer.from(signature),
-        recoveryId,
-        // nftName,
-        nftImage,
-      )
+      .mintWithCode()
       .accounts(reqAccts)
-      .signers([MY_WALLET])
-      .preInstructions([
-        /* create a Secp256k1Program instruction on-chain*/
-        web3.Secp256k1Program.createInstructionWithEthAddress({
-          ethAddress: eth_address,
-          message: actual_message,
-          signature: signature,
-          recoveryId: recoveryId,
-        }),
-      ])
+      .signers([RECEIVER_WALLET, MY_WALLET, mint])
       .transaction()
 
     transaction.feePayer = RECEIVER_WALLET.publicKey
@@ -215,7 +221,7 @@ it('Should mint a Soulbounded NFT with another account paying for the fees', asy
     tx = await sendAndConfirmTransaction(
       AnchorProvider.env().connection,
       transaction,
-      [RECEIVER_WALLET, MY_WALLET],
+      [RECEIVER_WALLET, MY_WALLET, mint],
     )
 
     console.log('tx', tx)
@@ -231,6 +237,7 @@ it('Should mint a Soulbounded NFT with another account paying for the fees', asy
         {
           isValid: false,
           expiry: new BN(5),
+          verificationTier: 'two',
         } as any
       )
       .accounts({

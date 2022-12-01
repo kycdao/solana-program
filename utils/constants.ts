@@ -22,7 +22,8 @@ export const PRICE_FEED = new PublicKey(
 /* remember to change them on the contract too (state.rs file) */
 export const KYCDAO_COLLECTION_KYC_SEED = 'KYCDAO_COLLECTION_KYC_SEED_2'
 export const KYCDAO_STATUS_KYC_SEED = 'KYCDAO_STATUS_KYC_SEED'
+export const KYCDAO_AUTHMINT_KYC_SEED = 'KYCDAO_AUTHMINT_KYC_SEED_1';
 
 export const programId = new web3.PublicKey(
-  'CAA11798ETgBYZT5KBN1z7SMat76Wt9xE5RCxU5nX5Ft',
+  '7CsRBRHVievYBbbm2L3b26wXY4qhXpF12RvokPzyAZsH',
 )

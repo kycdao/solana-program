@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum ErrorCode {
-    #[msg("SECP256K1 program or lenght doesn't match")]
+    #[msg("SECP256K1 program or length doesn't match")]
     InvalidDataProvided,
 
     #[msg("The signature data provided to validate the metadata is incorrect")]
@@ -16,4 +16,7 @@ pub enum ErrorCode {
 
     #[msg("The authority provided is not valid")]
     InvalidAuthority,
+
+    #[msg("The authMint provided is not valid")]
+    InvalidAuthMint,    
 }
