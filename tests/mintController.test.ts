@@ -11,6 +11,7 @@ import {
   Connection,
   Transaction,
   sendAndConfirmTransaction,
+  sendAndConfirmRawTransaction,
 } from '@solana/web3.js'
 import idl from '../target/idl/kyc_dao.json'
 import { KycDao } from '../target/types/kyc_dao'
@@ -27,7 +28,8 @@ import {
   TOKEN_METADATA_PROGRAM_ID,
   PRICE_FEED,
   programId,
-  KYCDAO_COLLECTION_KYC_SEED
+  KYCDAO_COLLECTION_KYC_SEED,
+  SECS_IN_YEAR
 } from '../utils/constants'
 import { ethers } from 'ethers'
 import {
@@ -37,7 +39,7 @@ import {
   getMetadata,
   getAuthMintId,
   getTokenWallet,
-  MY_WALLET,
+  BACKEND_WALLET,
   RECEIVER_WALLET,
   parsePrice,
 } from '../utils/utils'
@@ -89,8 +91,13 @@ describe('tests', () => {
     }    
   }),
 
-it('Should mint a Soulbounded NFT with via authMint', async () => {
+it('Should mint a Soulbounded NFT via authMint', async () => {
   try {
+    //This code is all running as BACKEND...
+    //Should have access to BACKEND_WALLET and RECEIVER_WALLET.public_key
+
+    console.log('Running code as BACKEND...')
+
     /* this is our lib.rs */
     const program = workspace.KycDao as Program<KycDao>
 
@@ -103,7 +110,7 @@ it('Should mint a Soulbounded NFT with via authMint', async () => {
     /* mint authority will handle the mint session */
     const mint = Keypair.generate()
     const associatedAccount = await getTokenWallet(
-      MY_WALLET.publicKey,
+      RECEIVER_WALLET.publicKey,
       mint.publicKey,
     )
     const metadata = await getMetadata(mint.publicKey)
@@ -113,59 +120,14 @@ it('Should mint a Soulbounded NFT with via authMint', async () => {
       MintLayout.span,
     )
 
-    /* Prepare accounts */
-    let transaction = new Transaction().add(
-      /* create a mint account and pay the rent */
-      SystemProgram.createAccount({
-        fromPubkey: RECEIVER_WALLET.publicKey,
-        newAccountPubkey: mint.publicKey,
-        space: MintLayout.span,
-        lamports: rent,
-        programId: TOKEN_PROGRAM_ID,
-      }),
-      /* initialize the mint*/
-      createInitializeMintInstruction(
-        mint.publicKey,
-        0,
-        MY_WALLET.publicKey,
-        MY_WALLET.publicKey,
-        TOKEN_PROGRAM_ID,
-      ),
-      /* create a token account that will hold the NFT */
-      createAssociatedTokenAccountInstruction(
-        associatedAccount,
-        RECEIVER_WALLET.publicKey,
-        MY_WALLET.publicKey,
-        mint.publicKey,
-      ),
-      /* mint 1 (and only) NFT to the mint account */
-      createMintToInstruction(
-        mint.publicKey,
-        associatedAccount,
-        MY_WALLET.publicKey,
-        1,
-        [],
-        TOKEN_PROGRAM_ID,
-      ),
-    )
-    transaction.feePayer = RECEIVER_WALLET.publicKey
-
-    console.log('running tx for account creations and minting...')
-    let tx = await sendAndConfirmTransaction(
-      AnchorProvider.env().connection,
-      transaction,
-      [RECEIVER_WALLET, MY_WALLET, mint],
-    )
-    console.log(tx)
-
     // Run the authMint
     const authMintId = await getAuthMintId(associatedAccount)
 
-    transaction = await program.methods
+    let transaction = await program.methods
       .initializeKycdaonftAuthmint(
         {
-          expiry: new BN(1),
-          secondsToPay: new BN(1),
+          expiry: new BN(1701436998),
+          secondsToPay: new BN(SECS_IN_YEAR),
           metadataCid: 'QmUDyt1mZEMUMLQ1PQj7UnYvo9phLLG6j3TKV7AvW6P4u6',
           verificationTier: 'one',
         })
@@ -173,20 +135,67 @@ it('Should mint a Soulbounded NFT with via authMint', async () => {
         associatedAccount: associatedAccount,
         kycdaoNftAuthmint: authMintId,
         collection: collectionId,
-        authority: MY_WALLET.publicKey,
+        authority: BACKEND_WALLET.publicKey,
         systemProgram: SystemProgram.programId,
       })
-      .signers([MY_WALLET])
+      .signers([BACKEND_WALLET])
       .transaction()
-    transaction.feePayer = MY_WALLET.publicKey
+    transaction.feePayer = BACKEND_WALLET.publicKey
 
     console.log('running tx for auth mint...')
+    let tx = await sendAndConfirmTransaction(
+      AnchorProvider.env().connection,
+      transaction,
+      [BACKEND_WALLET],
+    )
+    console.log(tx)
+
+    /* Prepare accounts */
+    transaction = new Transaction().add(
+      /* create a mint account and pay the rent */
+      SystemProgram.createAccount({
+        fromPubkey: BACKEND_WALLET.publicKey,
+        newAccountPubkey: mint.publicKey,
+        space: MintLayout.span,
+        lamports: rent,
+        programId: TOKEN_PROGRAM_ID,
+      }),
+      /* initialize the mint*/
+      createInitializeMintInstruction(
+        mint.publicKey,            // mint
+        0,                         //decimals
+        BACKEND_WALLET.publicKey,  // mint authority
+        BACKEND_WALLET.publicKey,  // freeze authority
+        TOKEN_PROGRAM_ID,          // token program
+      ),
+      /* create a token account that will hold the NFT */
+      createAssociatedTokenAccountInstruction(
+        associatedAccount,          // token account
+        BACKEND_WALLET.publicKey,   // payer
+        RECEIVER_WALLET.publicKey,   // wallet address
+        mint.publicKey,             // mint
+      ),
+      /* mint 1 (and only) NFT to the mint account */
+      createMintToInstruction(
+        mint.publicKey,             // mint
+        associatedAccount,          // token account
+        BACKEND_WALLET.publicKey,   // mint authority
+        1,                          // amount
+        [],                         // multisig
+        TOKEN_PROGRAM_ID,           // token program
+      ),
+    )
+    transaction.feePayer = BACKEND_WALLET.publicKey
+
+    console.log('running tx for account creations and minting...')
     tx = await sendAndConfirmTransaction(
       AnchorProvider.env().connection,
       transaction,
-      [MY_WALLET],
+      [BACKEND_WALLET, mint],
     )
     console.log(tx)
+
+    console.log('creating transaction for mintWithCode...')
 
     const reqAccts = {
       collection: collectionId,
@@ -196,14 +205,13 @@ it('Should mint a Soulbounded NFT with via authMint', async () => {
       metadata: metadata,
       mint: mint.publicKey,
       associatedAccount: associatedAccount,
-      mintAuthority: MY_WALLET.publicKey,
+      mintAuthority: BACKEND_WALLET.publicKey,
       feePayer: RECEIVER_WALLET.publicKey,
       priceFeed: PRICE_FEED,
       tokenProgram: TOKEN_PROGRAM_ID,
       tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
       rent: SYSVAR_RENT_PUBKEY,
-      ixSysvar: web3.SYSVAR_INSTRUCTIONS_PUBKEY,
     }
 
     console.log(`reqAccts: ${JSON.stringify(reqAccts, null, 2)}`)
@@ -212,24 +220,63 @@ it('Should mint a Soulbounded NFT with via authMint', async () => {
     transaction = await program.methods
       .mintWithCode()
       .accounts(reqAccts)
-      .signers([RECEIVER_WALLET, MY_WALLET, mint])
       .transaction()
-
     transaction.feePayer = RECEIVER_WALLET.publicKey
 
-    console.log('running tx for minting NFT...')
-    tx = await sendAndConfirmTransaction(
-      AnchorProvider.env().connection,
-      transaction,
-      [RECEIVER_WALLET, MY_WALLET, mint],
-    )
+    console.log('Adding recent blockhash to transaction')
+    let blockhash = await AnchorProvider.env().connection.getLatestBlockhash('finalized')
+    transaction.recentBlockhash = blockhash.blockhash
 
+    //TODO: Before making the mint_authority a signer we didn't need a BACKEND_WALLET signature...?
+    transaction.partialSign(BACKEND_WALLET)
+
+    // serialize the transaction to be sent to frontend
+    const serializedTransaction = transaction.serialize({
+      requireAllSignatures: false,
+    })
+    const transactionBase64 = serializedTransaction.toString("base64")
+    console.log(`transactionBase64: ${transactionBase64}`)
+    console.log('passing over to FRONTEND...')
+
+    // This code is all running as FRONTEND...
+    // Recover the transaction by de-serializing it
+    console.log('now in the FRONTEND, we can sign with RECEIVER_WALLET')
+    const recoveredTransaction = Transaction.from(
+      Buffer.from(transactionBase64, "base64")
+    )
+    console.log('Recovered the transaction')
+
+    console.log('Adding signature to transaction')
+    recoveredTransaction.partialSign(RECEIVER_WALLET)
+
+    console.log('running tx for minting NFT...')
+    // Calling sendAndConfirmRawTransaction() without a confirmationStrategy 
+    // is no longer supported and will be removed in a future version.
+    tx = await sendAndConfirmRawTransaction(
+      AnchorProvider.env().connection,
+      recoveredTransaction.serialize(),
+      
+      // TODO: I think the default confirmation strategy uses blockhashes, which
+      // is probably going to expire (about 2 minutes) before the frontend can sign the transaction.
+      // I believe the suggested approach is to use 'durable nonces' instead.
+      // https://solanacookbook.com/references/offline-transactions.html#durable-nonce
+      // Which is pretty... cumbersome.
+      // Also options suggested by copilot...
+      // {
+      //   skipPreflight: true,
+      //   commitment: "singleGossip",
+      //   preflightCommitment: "singleGossip",
+      // },
+    )
     console.log('tx', tx)
     expect(tx).not.to.be.null
 
     // Check state of the NFT
     let statusState = await program.account.kycDaoNftStatus.fetch(statusId)
     console.log(`statusState: ${JSON.stringify(statusState, null, 2)}`)
+
+    //This code is all running as BACKEND...
+    console.log('additional code running as BACKEND for state update...')
 
     // Change the status to isValid false
     transaction = await program.methods
@@ -243,18 +290,17 @@ it('Should mint a Soulbounded NFT with via authMint', async () => {
       .accounts({
         collection: collectionId,
         status: statusId,
-        authority: MY_WALLET.publicKey,
+        authority: BACKEND_WALLET.publicKey,
       })
-      .signers([MY_WALLET])
+      .signers([BACKEND_WALLET])
       .transaction()
-
-    transaction.feePayer = MY_WALLET.publicKey
+    transaction.feePayer = BACKEND_WALLET.publicKey
 
     console.log('running tx for updating status...')
     tx = await sendAndConfirmTransaction(
       AnchorProvider.env().connection,
       transaction,
-      [MY_WALLET],
+      [BACKEND_WALLET],
     )
     console.log('tx finished, now fetching new status...')
 

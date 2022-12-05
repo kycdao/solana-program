@@ -13,15 +13,12 @@ pub struct MintWithCode<'info> {
     #[account(
         mut, 
         has_one=wallet,
-        // seeds=[KYCDAO_COLLECTION_KYC_SEED.as_bytes()],
-        // bump,        
+        seeds=[KYCDAO_COLLECTION_KYC_SEED.as_bytes()],
+        bump,        
     )]
     pub collection: Account<'info, KycDaoNftCollection>,
-    //TODO: Need to look at status handling afterwards
     // CHECK: This is not dangerous because we don't read or write from this account
     #[account(
-        // mut,
-        // TODO: Need to enforce the seeds here
         init, 
         seeds=[KYCDAO_STATUS_KYC_SEED.as_bytes(), &mint.key.to_bytes()],
         bump,
@@ -53,7 +50,7 @@ pub struct MintWithCode<'info> {
     #[account(mut)]
     pub associated_account: AccountInfo<'info>,
     /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(mut)]
+    #[account(mut, signer)]
     pub mint_authority: AccountInfo<'info>,
     /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(mut, signer)]
@@ -62,6 +59,7 @@ pub struct MintWithCode<'info> {
     // #[account(signer)]
     // pub payer: Signer<'info>,
     /// CHECK: pyth oracle account
+    /// TODO: We need to ensure we have the right price_feed, store in the collection?
     #[account(mut)]
     pub price_feed: UncheckedAccount<'info>,
     /// CHECK: This is not dangerous because we don't read or write from this account
@@ -223,7 +221,6 @@ pub struct InitializeKycDAONFTAuthMint<'info> {
 //TODO: When is bump required?
 // #[instruction(bump: u8, data: KycDaoNftStatusData)]
 pub struct UpdateKycDAONFTStatus<'info> {
-    //TODO: NEED to enforce that this is the intended collection here, can't store authority in status as we can't update ALL
     /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(
         has_one = authority,
@@ -273,7 +270,6 @@ pub struct InitializeKycDAONFTCollection<'info> {
 #[derive(Accounts)]
 #[instruction(bump: u8, data: KycDaoNftCollectionData)]
 pub struct UpdateKycDAONFTCollection<'info> {
-    //TODO: We could limit this to only the intended collection by using seeds and bump
     #[account(
         mut, 
         has_one = authority,

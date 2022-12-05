@@ -1,7 +1,7 @@
 import { Program, web3, workspace, BN } from '@project-serum/anchor'
 import idl from '../target/idl/kyc_dao.json'
 import { MY_WALLET, parsePrice } from '../utils/utils'
-import { KYCDAO_COLLECTION_KYC_SEED } from '../utils/constants'
+import { KYCDAO_COLLECTION_KYC_SEED, SUBSCRIPTION_COST_DECIMALS } from '../utils/constants'
 import { KycDao } from '../target/types/kyc_dao'
 import { ethers } from 'ethers'
 import getLogInluding from './getLogInluding'
@@ -36,7 +36,7 @@ const main = async () => {
     bump,
     {
       ethSigner: ethers.utils.arrayify('0x' + eth_address),
-      pricePerYear: new BN(parsePrice(0.5)),
+      pricePerYear: new BN(5 * SUBSCRIPTION_COST_DECIMALS), // subscription cost in USD
       nftsMinted: new BN(0),
       symbol: 'KYC',
       name: 'KYCDAO NFT',

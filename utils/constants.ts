@@ -14,9 +14,14 @@ export const TOKEN_PROGRAM_ID = new PublicKey(
   'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
 )
 
+//TODO: This address is explicitly for the devnet, we need to change this for mainnet
+//https://pyth.network/price-feeds/crypto-sol-usd?cluster=devnet
 export const PRICE_FEED = new PublicKey(
   'J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix',
 )
+
+export const SUBSCRIPTION_COST_DECIMALS = 8
+export const SECS_IN_YEAR = 365 * 24 * 60 * 60
 
 /* seeds of the PDA, can be anything you want */
 /* remember to change them on the contract too (state.rs file) */

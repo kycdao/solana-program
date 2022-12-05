@@ -99,12 +99,13 @@ export const getAuthMintId = async (
   )[0]
 }
 
+//TODO: Pretty sure we don't want this... mantissa...hmmm
 export function parsePrice(price: number, mantissa: number = LAMPORTS_PER_SOL) {
   return Math.ceil(price * mantissa)
 }
 
 /* The wallet that will execute most of the activities */
-export const MY_WALLET = web3.Keypair.fromSecretKey(
+export const BACKEND_WALLET = web3.Keypair.fromSecretKey(
   new Uint8Array(
     JSON.parse(
       fs.readFileSync(__dirname + '/keypairs/my-wallet.json').toString(),
