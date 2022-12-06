@@ -9,5 +9,4 @@ yarn.lock
 Cargo.lock
 tests/keypairs
 .env
-utils/keypairs/my-wallet.json
-utils/keypairs/receiver-wallet.json
+utils/keypairs/*

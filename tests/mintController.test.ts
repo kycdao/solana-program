@@ -7,6 +7,7 @@ import {
   BN,
 } from '@project-serum/anchor'
 import {
+  NonceAccount,
   LAMPORTS_PER_SOL,
   Connection,
   Transaction,
@@ -41,6 +42,7 @@ import {
   getTokenWallet,
   BACKEND_WALLET,
   RECEIVER_WALLET,
+  NONCE_ACCOUNT,
   parsePrice,
 } from '../utils/utils'
 import { createSignature } from '../utils/ethSignature'
@@ -220,12 +222,21 @@ it('Should mint a Soulbounded NFT via authMint', async () => {
     transaction = await program.methods
       .mintWithCode()
       .accounts(reqAccts)
+      .preInstructions([
+        SystemProgram.nonceAdvance({
+          noncePubkey: NONCE_ACCOUNT.publicKey,
+          authorizedPubkey: BACKEND_WALLET.publicKey,
+        }),
+      ])
       .transaction()
     transaction.feePayer = RECEIVER_WALLET.publicKey
 
-    console.log('Adding recent blockhash to transaction')
-    let blockhash = await AnchorProvider.env().connection.getLatestBlockhash('finalized')
-    transaction.recentBlockhash = blockhash.blockhash
+    console.log('Adding nonce as recent blockhash to transaction')
+    let accountInfo = await AnchorProvider.env().connection.getAccountInfo(NONCE_ACCOUNT.publicKey);
+    let nonceAccount = NonceAccount.fromAccountData(accountInfo.data)    
+    // let blockhash = await AnchorProvider.env().connection.getLatestBlockhash('finalized')
+    transaction.recentBlockhash = nonceAccount.nonce
+    console.log(`blockhash is now: ${transaction.recentBlockhash}`)
 
     //TODO: Before making the mint_authority a signer we didn't need a BACKEND_WALLET signature...?
     transaction.partialSign(BACKEND_WALLET)
@@ -237,6 +248,11 @@ it('Should mint a Soulbounded NFT via authMint', async () => {
     const transactionBase64 = serializedTransaction.toString("base64")
     console.log(`transactionBase64: ${transactionBase64}`)
     console.log('passing over to FRONTEND...')
+
+    // wait for 5 minutes
+    // uncomment this to test transaction doesn't expire after 5 minutes
+    // console.log('waiting 5 minutes...')
+    // await new Promise((resolve) => setTimeout(resolve, 300000))
 
     // This code is all running as FRONTEND...
     // Recover the transaction by de-serializing it
