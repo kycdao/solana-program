@@ -53,7 +53,7 @@ pub mod kyc_dao {
         /* Price */
         let price_account_info: AccountInfo = ctx.accounts.price_feed.to_account_info();
         let price_feed: PriceFeed = load_price_feed_from_account_info(&price_account_info).unwrap();
-        let price_unwrap: Price = price_feed.get_current_price().unwrap();
+        let price_unwrap: Price = price_feed.get_price_unchecked();
         let solprice_usd: u64 = price_unwrap.price.try_into().unwrap();
         let price_expo: u32 = price_unwrap.expo.abs().try_into().unwrap();
         //TODO: This isn't super safe but price feed's decimals are the same as SUBSCRIPTION_COST_DECIMALS for now...
@@ -270,7 +270,7 @@ pub mod kyc_dao {
         /* Price */
         let price_account_info: AccountInfo = ctx.accounts.price_feed.to_account_info();
         let price_feed: PriceFeed = load_price_feed_from_account_info(&price_account_info).unwrap();
-        let price_unwrap: Price = price_feed.get_current_price().unwrap();
+        let price_unwrap: Price = price_feed.get_price_unchecked();
         let solprice_usd: u64 = price_unwrap.price.try_into().unwrap();
         let price_expo: u32 = price_unwrap.expo.abs().try_into().unwrap();
         //TODO: This isn't super safe but price feed's decimals are the same as SUBSCRIPTION_COST_DECIMALS for now...
@@ -582,7 +582,7 @@ pub mod kyc_dao {
         //TODO: Will need more complex expiry handling here, for now this is just doing one year
         let price_account_info: AccountInfo = ctx.accounts.price_feed.to_account_info();
         let price_feed: PriceFeed = load_price_feed_from_account_info(&price_account_info).unwrap();
-        let price_unwrap: Price = price_feed.get_current_price().unwrap();
+        let price_unwrap: Price = price_feed.get_price_unchecked();
         let price_u64: u64 = price_unwrap.price.try_into().unwrap();
         let price: u64 = kycdao_nft_collection
             .data
