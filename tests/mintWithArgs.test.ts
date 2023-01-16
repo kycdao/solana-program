@@ -129,12 +129,14 @@ describe('tests', () => {
         MintLayout.span,
       )
 
-      // Start compiling list of instructions, start with nonce
-      let reqIXs = [
-        SystemProgram.nonceAdvance({
-        noncePubkey: NONCE_ACCOUNT.publicKey,
-        authorizedPubkey: BACKEND_WALLET.publicKey,
-      })]
+      // Start compiling list of instructions
+      let reqIXs = []
+      // No longer using a nonce account
+      // let reqIXs = [
+      //   SystemProgram.nonceAdvance({
+      //   noncePubkey: NONCE_ACCOUNT.publicKey,
+      //   authorizedPubkey: BACKEND_WALLET.publicKey,
+      // })]
 
       console.log('Check if a status PDA already exists for this receiver...')
 
@@ -241,11 +243,12 @@ describe('tests', () => {
         .transaction()
       transaction.feePayer = RECEIVER_WALLET.publicKey
 
-      console.log('Adding nonce as recent blockhash to transaction')
-      let accountInfo = await AnchorProvider.env().connection.getAccountInfo(NONCE_ACCOUNT.publicKey);
-      let nonceAccount = NonceAccount.fromAccountData(accountInfo.data)    
-      // let blockhash = await AnchorProvider.env().connection.getLatestBlockhash('finalized')
-      transaction.recentBlockhash = nonceAccount.nonce
+      console.log('Adding recent blockhash to transaction')
+      // No longer using nonce as we have trouble with signing multiple txs at once
+      // let accountInfo = await AnchorProvider.env().connection.getAccountInfo(NONCE_ACCOUNT.publicKey);
+      // let nonceAccount = NonceAccount.fromAccountData(accountInfo.data)    
+      let blockhash = await AnchorProvider.env().connection.getLatestBlockhash('finalized')
+      transaction.recentBlockhash = blockhash.blockhash
       console.log(`blockhash is now: ${transaction.recentBlockhash}`)
 
       //TODO: Before making the mint_authority a signer we didn't need a BACKEND_WALLET signature...?
