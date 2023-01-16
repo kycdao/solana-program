@@ -14,8 +14,9 @@ export const TOKEN_PROGRAM_ID = new PublicKey(
   'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
 )
 
-//TODO: This address is explicitly for the devnet, we need to change this for mainnet
-//https://pyth.network/price-feeds/crypto-sol-usd?cluster=devnet
+// Current address is explicitly for the devnet, see below addr for mainnet
+// https://pyth.network/price-feeds/crypto-sol-usd?cluster=devnet
+// mainnet-addr = H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG
 export const PRICE_FEED = new PublicKey(
   'J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix',
 )
