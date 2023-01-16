@@ -29,6 +29,11 @@ export const KYCDAO_COLLECTION_KYC_SEED = 'KYCDAO_COLLECTION_KYC_SEED_2'
 export const KYCDAO_STATUS_KYC_SEED = 'KYCDAO_STATUS_KYC_SEED'
 export const KYCDAO_AUTHMINT_KYC_SEED = 'KYCDAO_AUTHMINT_KYC_SEED_1';
 
+export const KYCDAO_STATUS_SIZE = 8  +  // < discriminator   
+                                  1  +  // pub is_valid: bool,
+                                  8  +  // pub expiry: u64,
+                                  64    // pub verification_tier: String (?),    
+
 export const programId = new web3.PublicKey(
   '7CsRBRHVievYBbbm2L3b26wXY4qhXpF12RvokPzyAZsH',
 )

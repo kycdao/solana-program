@@ -30,7 +30,8 @@ import {
   PRICE_FEED,
   programId,
   KYCDAO_COLLECTION_KYC_SEED,
-  SECS_IN_YEAR
+  SECS_IN_YEAR,
+  KYCDAO_STATUS_SIZE,
 } from '../utils/constants'
 import { ethers } from 'ethers'
 import {
@@ -95,136 +96,176 @@ describe('tests', () => {
 
   it('Should mint a Soulbounded NFT using mintWithArgs all in one transaction', async () => {
     try {
-      // const BEBalance = await AnchorProvider.env().connection.getBalance(BACKEND_WALLET.publicKey)
-      // const UserBalance = await AnchorProvider.env().connection.getBalance(RECEIVER_WALLET.publicKey)
+      const BEBalance = await AnchorProvider.env().connection.getBalance(BACKEND_WALLET.publicKey)
+      const UserBalance = await AnchorProvider.env().connection.getBalance(RECEIVER_WALLET.publicKey)
 
-      // console.log('BE Balance: ', BEBalance / LAMPORTS_PER_SOL)
-      // console.log('User Balance: ', UserBalance / LAMPORTS_PER_SOL)
+      console.log('BE Balance: ', BEBalance / LAMPORTS_PER_SOL)
+      console.log('User Balance: ', UserBalance / LAMPORTS_PER_SOL)
 
-      // //This code is all running as BACKEND...
-      // //Should have access to BACKEND_WALLET and RECEIVER_WALLET.public_key
+      //This code is all running as BACKEND...
+      //Should have access to BACKEND_WALLET and RECEIVER_WALLET.public_key
 
-      // console.log('Running code as BACKEND...')
+      console.log('Running code as BACKEND...')
 
-      // /* this is our lib.rs */
-      // const program = workspace.KycDao as Program<KycDao>
+      /* this is our lib.rs */
+      const program = workspace.KycDao as Program<KycDao>
 
-      // const collectionId = await getCollectionId()
+      const collectionId = await getCollectionId()
 
-      // const kycDaoNftCollectionState = await program.account.kycDaoNftCollection.fetch(
-      //   collectionId,
-      // )
+      const kycDaoNftCollectionState = await program.account.kycDaoNftCollection.fetch(
+        collectionId,
+      )
 
-      // /* mint authority will handle the mint session */
-      // const mint = Keypair.generate()
-      // const associatedAccount = await getTokenWallet(
-      //   RECEIVER_WALLET.publicKey,
-      //   mint.publicKey,
-      // )
-      // const metadata = await getMetadata(mint.publicKey)
-      // const statusId = await getStatusId(mint.publicKey)
+      /* mint authority will handle the mint session */
+      const mint = Keypair.generate()
+      const associatedAccount = await getTokenWallet(
+        RECEIVER_WALLET.publicKey,
+        mint.publicKey,
+      )
+      const metadata = await getMetadata(mint.publicKey)
+      const [statusId, _bump] = await getStatusId(RECEIVER_WALLET.publicKey)
 
-      // const rent = await AnchorProvider.env().connection.getMinimumBalanceForRentExemption(
-      //   MintLayout.span,
-      // )
+      const mintRent = await AnchorProvider.env().connection.getMinimumBalanceForRentExemption(
+        MintLayout.span,
+      )
 
-      // console.log('creating transaction for mintWithArgs...')
+      // Start compiling list of instructions, start with nonce
+      let reqIXs = [
+        SystemProgram.nonceAdvance({
+        noncePubkey: NONCE_ACCOUNT.publicKey,
+        authorizedPubkey: BACKEND_WALLET.publicKey,
+      })]
 
-      // const reqAccts = {
-      //   collection: collectionId,
-      //   status: statusId,
-      //   // kycdaoNftAuthmint: authMintId,
-      //   wallet: kycDaoNftCollectionState.wallet,
-      //   metadata: metadata,
-      //   mint: mint.publicKey,
-      //   associatedAccount: associatedAccount,
-      //   mintAuthority: BACKEND_WALLET.publicKey,
-      //   feePayer: RECEIVER_WALLET.publicKey,
-      //   priceFeed: PRICE_FEED,
-      //   tokenProgram: TOKEN_PROGRAM_ID,
-      //   tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
-      //   systemProgram: SystemProgram.programId,
-      //   rent: SYSVAR_RENT_PUBKEY,
-      // }
+      console.log('Check if a status PDA already exists for this receiver...')
 
-      // console.log(`reqAccts: ${JSON.stringify(reqAccts, null, 2)}`)
+      try {
+        const statusState = await program.account.kycDaoNftStatus.fetch(statusId)
+        console.log('Status PDA already exists for this receiver!')
+        console.log('Status PDA: ', statusState)
+        const statusIX = await program.methods.updateStatus({
+            isValid: true,
+            expiry: new BN(1701436998),
+            verificationTier: 'one',
+          } as any
+        ).accounts({
+          collection: collectionId,
+          status: statusId,
+          authority: BACKEND_WALLET.publicKey,
+        }).instruction()
+        reqIXs.push(statusIX)        
+      } catch (err) {
+        console.log('Status PDA does not exist for this receiver, creating instruction for it...')
+        const statusIX = await program.methods.initStatus({
+            isValid: true,
+            expiry: new BN(1701436998),
+            verificationTier: 'one',
+          } as any
+        ).accounts({
+          collection: collectionId,
+          receiver: RECEIVER_WALLET.publicKey,
+          status: statusId,
+          authority: BACKEND_WALLET.publicKey,
+          systemProgram: SystemProgram.programId,
+        }).instruction()
+        reqIXs.push(statusIX) 
+      }
 
-      // /* mintNFT */
-      // let transaction = await program.methods
-      //   .mintWithArgs(
-      //       new BN(1701436998),                               // expiry
-      //       new BN(0),                                        // secondsToPay
-      //       // secondsToPay: new BN(SECS_IN_YEAR),
-      //       'QmUDyt1mZEMUMLQ1PQj7UnYvo9phLLG6j3TKV7AvW6P4u6', // metadataCid
-      //       'one',                                            // verificationTier
-      //   )
-      //   .accounts(reqAccts)
-      //   .preInstructions([
-      //     SystemProgram.nonceAdvance({
-      //       noncePubkey: NONCE_ACCOUNT.publicKey,
-      //       authorizedPubkey: BACKEND_WALLET.publicKey,
-      //     }),
-      //     /* create a mint account and pay the rent */
-      //     SystemProgram.createAccount({
-      //       fromPubkey: RECEIVER_WALLET.publicKey,
-      //       newAccountPubkey: mint.publicKey,
-      //       space: MintLayout.span,
-      //       lamports: rent,
-      //       programId: TOKEN_PROGRAM_ID,
-      //     }),
-      //     /* initialize the mint*/
-      //     createInitializeMintInstruction(
-      //       mint.publicKey,            // mint
-      //       0,                         //decimals
-      //       BACKEND_WALLET.publicKey,  // mint authority
-      //       BACKEND_WALLET.publicKey,  // freeze authority
-      //       TOKEN_PROGRAM_ID,          // token program
-      //     ),
-      //     /* create a token account that will hold the NFT */
-      //     createAssociatedTokenAccountInstruction(
-      //       associatedAccount,          // token account
-      //       RECEIVER_WALLET.publicKey,   // payer
-      //       RECEIVER_WALLET.publicKey,   // wallet address
-      //       mint.publicKey,             // mint
-      //     ),
-      //     /* mint 1 (and only) NFT to the mint account */
-      //     createMintToInstruction(
-      //       mint.publicKey,             // mint
-      //       associatedAccount,          // token account
-      //       BACKEND_WALLET.publicKey,   // mint authority
-      //       1,                          // amount
-      //       [],                         // multisig
-      //       TOKEN_PROGRAM_ID,           // token program
-      //     ),          
-      //   ])
-      //   .transaction()
-      // transaction.feePayer = RECEIVER_WALLET.publicKey
+      console.log('creating transaction for mintWithArgs...')
 
-      // console.log('Adding nonce as recent blockhash to transaction')
-      // let accountInfo = await AnchorProvider.env().connection.getAccountInfo(NONCE_ACCOUNT.publicKey);
-      // let nonceAccount = NonceAccount.fromAccountData(accountInfo.data)    
-      // // let blockhash = await AnchorProvider.env().connection.getLatestBlockhash('finalized')
-      // transaction.recentBlockhash = nonceAccount.nonce
-      // console.log(`blockhash is now: ${transaction.recentBlockhash}`)
+      reqIXs = reqIXs.concat(
+      [
+        /* create a mint account and pay the rent */
+        SystemProgram.createAccount({
+          fromPubkey: RECEIVER_WALLET.publicKey,
+          newAccountPubkey: mint.publicKey,
+          space: MintLayout.span,
+          lamports: mintRent,
+          programId: TOKEN_PROGRAM_ID,
+        }),
+        /* initialize the mint*/
+        createInitializeMintInstruction(
+          mint.publicKey,            // mint
+          0,                         //decimals
+          BACKEND_WALLET.publicKey,  // mint authority
+          BACKEND_WALLET.publicKey,  // freeze authority
+          TOKEN_PROGRAM_ID,          // token program
+        ),
+        /* create a token account that will hold the NFT */
+        createAssociatedTokenAccountInstruction(
+          associatedAccount,          // token account
+          RECEIVER_WALLET.publicKey,   // payer
+          RECEIVER_WALLET.publicKey,   // wallet address
+          mint.publicKey,             // mint
+        ),
+        /* mint 1 (and only) NFT to the mint account */
+        createMintToInstruction(
+          mint.publicKey,             // mint
+          associatedAccount,          // token account
+          BACKEND_WALLET.publicKey,   // mint authority
+          1,                          // amount
+          [],                         // multisig
+          TOKEN_PROGRAM_ID,           // token program
+        ),          
+      ])
 
-      // //TODO: Before making the mint_authority a signer we didn't need a BACKEND_WALLET signature...?
-      // transaction.partialSign(BACKEND_WALLET)
-      // transaction.partialSign(mint)
+      const reqAccts = {
+        collection: collectionId,
+        receiver: RECEIVER_WALLET.publicKey,
+        status: statusId,
+        wallet: kycDaoNftCollectionState.wallet,
+        metadata: metadata,
+        mint: mint.publicKey,
+        associatedAccount: associatedAccount,
+        mintAuthority: BACKEND_WALLET.publicKey,
+        feePayer: RECEIVER_WALLET.publicKey,
+        priceFeed: PRICE_FEED,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY,
+      }
 
-      // // serialize the transaction to be sent to frontend
-      // const serializedTransaction = transaction.serialize({
-      //   requireAllSignatures: false,
-      // })
-      // const transactionBase64 = serializedTransaction.toString("base64")
-      // console.log(`transactionBase64: ${transactionBase64}`)
-      // console.log('passing over to FRONTEND...')
+      console.log(`reqAccts: ${JSON.stringify(reqAccts, null, 2)}`)
 
-      // wait for 5 minutes
-      // uncomment this to test transaction doesn't expire after 5 minutes
+      /* mintNFT */
+      let transaction = await program.methods
+        .mintWithArgs(
+            // new BN(1701436998),                               // expiry
+            new BN(0),                                        // secondsToPay
+            // // secondsToPay: new BN(SECS_IN_YEAR),
+            'QmUDyt1mZEMUMLQ1PQj7UnYvo9phLLG6j3TKV7AvW6P4u6', // metadataCid
+            // 'one',                                            // verificationTier
+        )
+        .accounts(reqAccts)
+        .preInstructions(reqIXs)
+        .transaction()
+      transaction.feePayer = RECEIVER_WALLET.publicKey
+
+      console.log('Adding nonce as recent blockhash to transaction')
+      let accountInfo = await AnchorProvider.env().connection.getAccountInfo(NONCE_ACCOUNT.publicKey);
+      let nonceAccount = NonceAccount.fromAccountData(accountInfo.data)    
+      // let blockhash = await AnchorProvider.env().connection.getLatestBlockhash('finalized')
+      transaction.recentBlockhash = nonceAccount.nonce
+      console.log(`blockhash is now: ${transaction.recentBlockhash}`)
+
+      //TODO: Before making the mint_authority a signer we didn't need a BACKEND_WALLET signature...?
+      transaction.partialSign(BACKEND_WALLET)
+      transaction.partialSign(mint)
+
+      // serialize the transaction to be sent to frontend
+      const serializedTransaction = transaction.serialize({
+        requireAllSignatures: false,
+      })
+      const transactionBase64 = serializedTransaction.toString("base64")
+      console.log(`transactionBase64: ${transactionBase64}`)
+      console.log('passing over to FRONTEND...')
+
+      // // wait for 5 minutes
+      // // uncomment this to test transaction doesn't expire after 5 minutes
       // console.log('waiting 5 minutes...')
       // await new Promise((resolve) => setTimeout(resolve, 300000))
 
-      const transactionBase64 = "AwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADdqygrAKLvNZRwZXNWjluLOjHylOM5caAx+zTe3otjmEFh037QUf73qo93G7cKEkpx/30KDMmlGl4iq1je6HcOoYbENcllgE08CR902Oasd0TlSRAVRb4N09XZkAZvPCUysIOjbcpwWbAqtvX8X4seshsDzdcrKaqJM6Pv3A0IBwMABxDQbEPMg9fMsuGIq2FzEjREoq6/wnuphDixcF0Sl0201Hv+la/k19kwTzN3Ko44wfl6PisftwhFFd26et5LC0L55q5YNZveaoqyi3hNeaWdbJBSA7oNqZNucHbutGksnqg0XCwzsvLa6A7lQyOw7S9WWRf8UxRiSH1GWqSwHdtTfMdeHcsep/YQy1H801HC0pLsjA1s8vFKXDGvAu2uY4XY8K/u06TgrOf+GrdK7tvcCP17GJC9L9kUw+s2VHp3JkfxQ5fHoyfpw7jZEOIQcylBeNhjB+qVtQYB0M9wifG9pB1V0ihNKIFlYL3d668YoCUbd6DLDxp4xMKCqGK/TNEK/mUPA2fUp++YFaWT6hXTZZPwZDqq8BSbsEvmerhR3s0Gp9UXGSxWjuCKhF9z0peIzwNcMUWyGrNE2AYuqUAAAAan1RcZLFxRIYzJTD1K8X9Y2u4Im6H9ROPb2YoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG3fbh12Whk9nL4UbO63msHLSF7V9bN5E6jPWFfv8AqQtwZbHj0XxFOJ1Sf2sEw81YuGxzGqD9tUm20bwD+ClGjJclj04kifG7PRApFI4NgwtaE5na/xCEBI572Nvp+FlcMIRbQW/f2/rscUou9eszPa/nsxz6ynFh6Ld6BGVsbLkbWBoCnfOkzHHKqc2N+Ccf3tmqhR9xLXeW0cAPePvVBgsDAwkCBAQAAAALAgABNAAAAABgTRYAAAAAAFIAAAAAAAAABt324ddloZPZy+FGzut5rBy0he1fWzeROoz1hX7/AKkMAgEKQwAA5q5YNZveaoqyi3hNeaWdbJBSA7oNqZNucHbutGksnqgB5q5YNZveaoqyi3hNeaWdbJBSA7oNqZNucHbutGksnqgOBwAEAAELDAoADAMBBAIJBwEAAAAAAAAADw0FBgIHAQQCAAgMDQsKUZNRETgWibOwRt5pZQAAAAAAAAAAAAAAAC4AAABRbVVEeXQxbVpFTVVNTFExUFFqN1VuWXZvOXBoTExHNmozVEtWN0F2VzZQNHU2AwAAAG9uZQ=="
+      // const transactionBase64 = "AwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADdqygrAKLvNZRwZXNWjluLOjHylOM5caAx+zTe3otjmEFh037QUf73qo93G7cKEkpx/30KDMmlGl4iq1je6HcOoYbENcllgE08CR902Oasd0TlSRAVRb4N09XZkAZvPCUysIOjbcpwWbAqtvX8X4seshsDzdcrKaqJM6Pv3A0IBwMABxDQbEPMg9fMsuGIq2FzEjREoq6/wnuphDixcF0Sl0201Hv+la/k19kwTzN3Ko44wfl6PisftwhFFd26et5LC0L55q5YNZveaoqyi3hNeaWdbJBSA7oNqZNucHbutGksnqg0XCwzsvLa6A7lQyOw7S9WWRf8UxRiSH1GWqSwHdtTfMdeHcsep/YQy1H801HC0pLsjA1s8vFKXDGvAu2uY4XY8K/u06TgrOf+GrdK7tvcCP17GJC9L9kUw+s2VHp3JkfxQ5fHoyfpw7jZEOIQcylBeNhjB+qVtQYB0M9wifG9pB1V0ihNKIFlYL3d668YoCUbd6DLDxp4xMKCqGK/TNEK/mUPA2fUp++YFaWT6hXTZZPwZDqq8BSbsEvmerhR3s0Gp9UXGSxWjuCKhF9z0peIzwNcMUWyGrNE2AYuqUAAAAan1RcZLFxRIYzJTD1K8X9Y2u4Im6H9ROPb2YoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG3fbh12Whk9nL4UbO63msHLSF7V9bN5E6jPWFfv8AqQtwZbHj0XxFOJ1Sf2sEw81YuGxzGqD9tUm20bwD+ClGjJclj04kifG7PRApFI4NgwtaE5na/xCEBI572Nvp+FlcMIRbQW/f2/rscUou9eszPa/nsxz6ynFh6Ld6BGVsbLkbWBoCnfOkzHHKqc2N+Ccf3tmqhR9xLXeW0cAPePvVBgsDAwkCBAQAAAALAgABNAAAAABgTRYAAAAAAFIAAAAAAAAABt324ddloZPZy+FGzut5rBy0he1fWzeROoz1hX7/AKkMAgEKQwAA5q5YNZveaoqyi3hNeaWdbJBSA7oNqZNucHbutGksnqgB5q5YNZveaoqyi3hNeaWdbJBSA7oNqZNucHbutGksnqgOBwAEAAELDAoADAMBBAIJBwEAAAAAAAAADw0FBgIHAQQCAAgMDQsKUZNRETgWibOwRt5pZQAAAAAAAAAAAAAAAC4AAABRbVVEeXQxbVpFTVVNTFExUFFqN1VuWXZvOXBoTExHNmozVEtWN0F2VzZQNHU2AwAAAG9uZQ=="
 
       // This code is all running as FRONTEND...
       // Recover the transaction by de-serializing it
@@ -234,7 +275,7 @@ describe('tests', () => {
       )
       console.log('Recovered the transaction')
 
-      let mintkycIX = recoveredTransaction.instructions[5]
+      let mintkycIX = recoveredTransaction.instructions[recoveredTransaction.instructions.length - 1]
       let mintIXdata = mintkycIX.data.toString("base64")
       console.log(`mintkycIX.data is: ${mintkycIX.data}`)
       console.log(`mintIXdata is: ${mintIXdata}`)

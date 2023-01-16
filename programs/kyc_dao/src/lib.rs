@@ -31,12 +31,18 @@ pub mod kyc_dao {
     const SUBSCRIPTION_COST_DECIMALS: u32 = 8;
     const SECS_IN_YEAR: u64 = 365 * 24 * 60 * 60;
 
+    // pub fn has_valid_token(
+    //     ctx: Context<HasValidToken>,
+    // ) -> Result<bool> {
+    //     Ok(false)
+    // }
+
     pub fn mint_with_args(
         ctx: Context<MintWithArgs>,
-        expiry: u64,
+        // expiry: u64,
         seconds_to_pay: u64,
         metadata_cid: String,
-        verification_tier: String,        
+        // verification_tier: String,        
     ) -> Result<()> {
         /* get the mutable context */
         let kycdao_nft_collection = &mut ctx.accounts.collection;
@@ -45,10 +51,10 @@ pub mod kyc_dao {
         kycdao_nft_collection.data.nfts_minted += 1;
 
         // Set isValid to true here
-        let kycdao_nft_status = &mut ctx.accounts.status;
-        kycdao_nft_status.data.is_valid = true;
-        kycdao_nft_status.data.expiry = expiry;
-        kycdao_nft_status.data.verification_tier = verification_tier;
+        // let kycdao_nft_status = &mut ctx.accounts.status;
+        // kycdao_nft_status.data.is_valid = true;
+        // kycdao_nft_status.data.expiry = expiry;
+        // kycdao_nft_status.data.verification_tier = verification_tier;
 
         /* Price */
         let price_account_info: AccountInfo = ctx.accounts.price_feed.to_account_info();
@@ -463,17 +469,22 @@ pub mod kyc_dao {
         Ok(())
     }
 
+    pub fn init_status(
+        ctx: Context<InitializeKycDAONFTStatus>,
+        // _bump: u8,
+        data: KycDaoNftStatusData,
+    ) -> Result<()> {
+        let status = &mut ctx.accounts.status;
+        status.data = data;
+        Ok(())
+    }
+
     pub fn update_status(
         ctx: Context<UpdateKycDAONFTStatus>,
         // _bump: u8,
         data: KycDaoNftStatusData,
     ) -> Result<()> {
         let status = &mut ctx.accounts.status;
-        // msg!(
-        //     "KycDAO: State changed from {} to {}",
-        //     status.data,
-        //     data
-        // );
         status.data = data;
         Ok(())
     }
