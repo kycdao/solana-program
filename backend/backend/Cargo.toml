@@ -9,13 +9,16 @@ edition = "2021"
 kyc_dao = { path = "../../programs/kyc_dao", features = ["no-entrypoint"] }
 
 retry = "1.3.1"
-solana-client = "1.10.41"
-solana-sdk = "1.10.41"
+solana-client = "1.13.5"
+solana-sdk = "1.13.5"
 spl-associated-token-account = "1.0.3"
 spl-token = "3.5.0"
 anyhow = "1.0.57"
 shellexpand = "2.1"
-anchor-lang = "0.25.0"
+anchor-client = "0.26"
+anchor-lang = "0.26"
 base64 = "0.20.0-alpha.1"
 bincode = "1.0"
 serde = { version = "1.0.130", features = ["derive"] }
+# needed to fix problem causes by anchor-0.26 upgrade
+time = "=0.3.15"

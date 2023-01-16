@@ -1,6 +1,6 @@
 import { Program, web3, workspace, BN } from '@project-serum/anchor'
 import idl from '../target/idl/kyc_dao.json'
-import { MY_WALLET, parsePrice } from '../utils/utils'
+import { BACKEND_WALLET, parsePrice } from '../utils/utils'
 import { KYCDAO_COLLECTION_KYC_SEED, SUBSCRIPTION_COST_DECIMALS } from '../utils/constants'
 import { KycDao } from '../target/types/kyc_dao'
 import { ethers } from 'ethers'
@@ -50,11 +50,11 @@ const main = async () => {
     {
       accounts: {
         kycdaoNftCollection: kycdaoNFTCollectionId,
-        wallet: MY_WALLET.publicKey, // who will receive the SOL of each mint
-        authority: MY_WALLET.publicKey,
+        wallet: BACKEND_WALLET.publicKey, // who will receive the SOL of each mint
+        authority: BACKEND_WALLET.publicKey,
         systemProgram: SystemProgram.programId,
       },
-      signers: [MY_WALLET],
+      signers: [BACKEND_WALLET],
     },
   )
 

@@ -13,7 +13,7 @@ use anyhow::{Result};
 // use serde::Serializer;
 // use serde::Serialize;
 // use serde_json::Value;
-use solana_client::{
+use anchor_client::solana_client::{
     rpc_client::RpcClient,
     blockhash_query::Source,
 };
@@ -248,7 +248,7 @@ pub fn prepare_tx(
     ];
     
     let recent_blockhash = Source::NonceAccount(nonce).get_blockhash(
-        client, 
+        client,
         CommitmentConfig::finalized()
     ).unwrap();
     let mut tx = Transaction::new_with_payer(
