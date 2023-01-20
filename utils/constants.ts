@@ -36,5 +36,5 @@ export const KYCDAO_STATUS_SIZE = 8  +  // < discriminator
                                   64    // pub verification_tier: String (?),    
 
 export const programId = new web3.PublicKey(
-  '7CsRBRHVievYBbbm2L3b26wXY4qhXpF12RvokPzyAZsH',
+  '3j93ny9pacByeHi8JCnP34wk7fBVJzyvURktAr3TdfcF',
 )

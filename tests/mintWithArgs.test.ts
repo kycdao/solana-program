@@ -14,8 +14,8 @@ import {
   sendAndConfirmTransaction,
   sendAndConfirmRawTransaction,
 } from '@solana/web3.js'
-import idl from '../target/idl/kyc_dao.json'
-import { KycDao } from '../target/types/kyc_dao'
+import idl from '../target/idl/ntnft.json'
+import { KycDao } from '../target/types/ntnft'
 import {
   MintLayout,
   TOKEN_PROGRAM_ID,

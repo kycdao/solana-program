@@ -1,6 +1,6 @@
 import { Program, Idl } from '@project-serum/anchor'
-import { KycDao } from '../target/types/kyc_dao'
-import idl from '../target/idl/kyc_dao.json'
+import { KycDao } from '../target/types/ntnft'
+import idl from '../target/idl/ntnft.json'
 import { MY_WALLET } from '../utils/utils'
 import { stateMachine, programId } from '../utils/constants'
 

@@ -12,10 +12,10 @@ pub mod error;
 pub mod state;
 pub mod verify_signature;
 
-declare_id!("7CsRBRHVievYBbbm2L3b26wXY4qhXpF12RvokPzyAZsH");
+declare_id!("3j93ny9pacByeHi8JCnP34wk7fBVJzyvURktAr3TdfcF");
 
 #[program]
-pub mod kyc_dao {
+pub mod ntnft {
 
     use super::*;
     use anchor_lang::solana_program::{
