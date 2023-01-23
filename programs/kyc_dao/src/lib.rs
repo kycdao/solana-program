@@ -10,7 +10,7 @@ pub mod error;
 pub mod state;
 pub mod verify_signature;
 
-declare_id!("7CsRBRHVievYBbbm2L3b26wXY4qhXpF12RvokPzyAZsH");
+declare_id!("3j93ny9pacByeHi8JCnP34wk7fBVJzyvURktAr3TdfcF");
 
 #[program]
 pub mod kyc_dao {
@@ -29,11 +29,18 @@ pub mod kyc_dao {
     const SUBSCRIPTION_COST_DECIMALS: u32 = 8;
     const SECS_IN_YEAR: u64 = 365 * 24 * 60 * 60;
 
-    // pub fn has_valid_token(
-    //     ctx: Context<HasValidToken>,
-    // ) -> Result<bool> {
-    //     Ok(false)
-    // }
+    pub fn has_valid_token(
+        ctx: Context<HasValidToken>,
+        addr: Pubkey,
+    ) -> Result<bool> {
+        let kycdao_nft_status = &ctx.accounts.status;
+        let is_valid = kycdao_nft_status.data.is_valid;
+        let expiry = kycdao_nft_status.data.expiry;
+        let now = Clock::get()?.unix_timestamp.unsigned_abs();
+        let result = is_valid && expiry > now;
+        msg!("has_valid_token for addr: {}, result: {}", addr, result);
+        return Ok(result)
+    }
 
     pub fn mint_with_args(
         ctx: Context<MintWithArgs>,

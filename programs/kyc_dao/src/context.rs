@@ -8,12 +8,6 @@ use {
 };
 
 #[derive(Accounts)]
-pub struct HasValidToken<'info> {
-    #[account()]
-    pub status: Account<'info, KycDaoNftStatus>,
-}
-
-#[derive(Accounts)]
 pub struct MintWithArgs<'info> {
     #[account(
         mut, 
@@ -190,6 +184,16 @@ pub struct UpdateKycDAONFTCollection<'info> {
     /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(signer)]
     pub authority: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+#[instruction(addr: Pubkey)]
+pub struct HasValidToken<'info> {
+    #[account(
+        seeds=[KYCDAO_STATUS_KYC_SEED.as_bytes(), addr.as_ref()],
+        bump,
+    )]
+    pub status: Account<'info, KycDaoNftStatus>,
 }
 
 /* rent table */

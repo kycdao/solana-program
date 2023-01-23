@@ -52,7 +52,7 @@ import findTransactionSignature from '../scripts/getTransactionSignatures'
 import initializeCollection from '../scripts/initializeCollection'
 import updateCandyMachine from '../scripts/updateCollection'
 import updateStateMachine from '../scripts/updateStateMachine'
-import getLogInluding from '../scripts/getLogInluding'
+import getLogIncluding from '../scripts/getLogIncluding'
 import { expect } from 'chai'
 import * as assert from 'assert'
 import * as dotenv from 'dotenv'
@@ -297,15 +297,43 @@ describe('tests', () => {
       expect(tx).not.to.be.null
 
       // Check state of the NFT
-      // let statusState = await program.account.kycDaoNftStatus.fetch(statusId)
-      // console.log(`statusState: ${JSON.stringify(statusState, null, 2)}`)
+      let statusState = await program.account.kycDaoNftStatus.fetch(statusId)
+      console.log(`statusState: ${JSON.stringify(statusState, null, 2)}`)
       
-      // const BEBalanceAfter = await AnchorProvider.env().connection.getBalance(BACKEND_WALLET.publicKey)
-      // const UserBalanceAfter = await AnchorProvider.env().connection.getBalance(RECEIVER_WALLET.publicKey)
+      const BEBalanceAfter = await AnchorProvider.env().connection.getBalance(BACKEND_WALLET.publicKey)
+      const UserBalanceAfter = await AnchorProvider.env().connection.getBalance(RECEIVER_WALLET.publicKey)
 
-      // console.log('BE SOL spent: ', (BEBalance - BEBalanceAfter) / LAMPORTS_PER_SOL)
-      // console.log('User SOL spent: ', (UserBalance - UserBalanceAfter) / LAMPORTS_PER_SOL)
+      console.log('BE SOL spent: ', (BEBalance - BEBalanceAfter) / LAMPORTS_PER_SOL)
+      console.log('User SOL spent: ', (UserBalance - UserBalanceAfter) / LAMPORTS_PER_SOL)
 
+      // Run hasValidToken to check if the user has a valid token
+      const reqAcctsHasValidToken = {
+        status: statusId,
+      }
+
+      const newTransaction = await program.methods.hasValidToken(
+        RECEIVER_WALLET.publicKey,
+      )
+      .accounts(reqAcctsHasValidToken)
+      .transaction()
+      // newTransaction.feePayer = RECEIVER_WALLET.publicKey
+
+      // Submit the transaction
+      console.log('running tx for hasValidToken...')
+      tx = await sendAndConfirmTransaction(
+        AnchorProvider.env().connection,
+        newTransaction,
+        [RECEIVER_WALLET],
+      )
+      console.log('tx', tx)
+      expect(tx).not.to.be.null
+
+      // Wait 10 seconds for the transaction log to be available
+      console.log('waiting 3 seconds for the transaction log to be available...')
+      await new Promise(f => setTimeout(f, 3000));
+
+      const log = await getLogIncluding('', program, tx)
+      console.log('log: ', log)
     } catch (e) {
       throw e
     }

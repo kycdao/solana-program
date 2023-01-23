@@ -4,7 +4,7 @@ import { BACKEND_WALLET, parsePrice } from '../utils/utils'
 import { KYCDAO_COLLECTION_KYC_SEED, SUBSCRIPTION_COST_DECIMALS } from '../utils/constants'
 import { KycDao } from '../target/types/kyc_dao'
 import { ethers } from 'ethers'
-import getLogInluding from './getLogInluding'
+import getLogIncluding from './getLogIncluding'
 import * as dotenv from 'dotenv'
 dotenv.config()
 
