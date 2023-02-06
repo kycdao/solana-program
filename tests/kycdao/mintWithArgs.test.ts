@@ -14,8 +14,8 @@ import {
   sendAndConfirmTransaction,
   sendAndConfirmRawTransaction,
 } from '@solana/web3.js'
-import idl from '../target/idl/kyc_dao.json'
-import { KycDao } from '../target/types/kyc_dao'
+import idl from '../../target/idl/kyc_dao.json'
+import { KycDao } from '../../target/types/kyc_dao'
 import {
   MintLayout,
   TOKEN_PROGRAM_ID,
@@ -28,31 +28,29 @@ import {
 import {
   TOKEN_METADATA_PROGRAM_ID,
   PRICE_FEED,
-  programId,
   KYCDAO_COLLECTION_KYC_SEED,
   SECS_IN_YEAR,
   KYCDAO_STATUS_SIZE,
-} from '../utils/constants'
+} from '../../utils/constants'
 import { ethers } from 'ethers'
 import {
   createAssociatedTokenAccountInstruction,
   getCollectionId,
   getStatusId,
   getMetadata,
-  getAuthMintId,
   getTokenWallet,
   BACKEND_WALLET,
   RECEIVER_WALLET,
   NONCE_ACCOUNT,
   parsePrice,
-} from '../utils/utils'
-import { createSignature } from '../utils/ethSignature'
-import getPastEvents from '../scripts/getPastEvents'
-import findTransactionSignature from '../scripts/getTransactionSignatures'
-import initializeCollection from '../scripts/initializeCollection'
-import updateCandyMachine from '../scripts/updateCollection'
-import updateStateMachine from '../scripts/updateStateMachine'
-import getLogIncluding from '../scripts/getLogIncluding'
+} from '../../utils/utils'
+import { createSignature } from '../../utils/ethSignature'
+import getPastEvents from '../../scripts/getPastEvents'
+import findTransactionSignature from '../../scripts/getTransactionSignatures'
+import initializeCollection from '../../scripts/initializeCollection'
+import updateCandyMachine from '../../scripts/updateCollection'
+import updateStateMachine from '../../scripts/updateStateMachine'
+import getLogIncluding from '../../scripts/getLogIncluding'
 import { expect } from 'chai'
 import * as assert from 'assert'
 import * as dotenv from 'dotenv'
@@ -311,29 +309,37 @@ describe('tests', () => {
         status: statusId,
       }
 
-      const newTransaction = await program.methods.hasValidToken(
+      const resp = await program.methods.hasValidToken(
         RECEIVER_WALLET.publicKey,
       )
       .accounts(reqAcctsHasValidToken)
-      .transaction()
-      // newTransaction.feePayer = RECEIVER_WALLET.publicKey
+      .view()
 
-      // Submit the transaction
-      console.log('running tx for hasValidToken...')
-      tx = await sendAndConfirmTransaction(
-        AnchorProvider.env().connection,
-        newTransaction,
-        [RECEIVER_WALLET],
-      )
-      console.log('tx', tx)
-      expect(tx).not.to.be.null
+      console.log('resp: ', resp)
 
-      // Wait 10 seconds for the transaction log to be available
-      console.log('waiting 3 seconds for the transaction log to be available...')
-      await new Promise(f => setTimeout(f, 3000));
+      // const newTransaction = await program.methods.hasValidToken(
+      //   RECEIVER_WALLET.publicKey,
+      // )
+      // .accounts(reqAcctsHasValidToken)
+      // .transaction()
+      // // newTransaction.feePayer = RECEIVER_WALLET.publicKey
 
-      const log = await getLogIncluding('', program, tx)
-      console.log('log: ', log)
+      // // Submit the transaction
+      // console.log('running tx for hasValidToken...')
+      // tx = await sendAndConfirmTransaction(
+      //   AnchorProvider.env().connection,
+      //   newTransaction,
+      //   [RECEIVER_WALLET],
+      // )
+      // console.log('tx', tx)
+      // expect(tx).not.to.be.null
+
+      // // Wait 10 seconds for the transaction log to be available
+      // console.log('waiting 3 seconds for the transaction log to be available...')
+      // await new Promise(f => setTimeout(f, 3000));
+
+      // const log = await getLogIncluding('', program, tx)
+      // console.log('log: ', log)
     } catch (e) {
       throw e
     }

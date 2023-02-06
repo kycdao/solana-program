@@ -1,7 +1,12 @@
 [features]
 seeds = false
 skip-lint = false
+
+[programs.localnet]
+kyc_dao = "3j93ny9pacByeHi8JCnP34wk7fBVJzyvURktAr3TdfcF"
+
 [programs.devnet]
+kycdao_cpi_example = "12ooNXAnRpGcTX1fHBWysVoSzHvmqxZqWy4EQj6PcNyv"
 kyc_dao = "3j93ny9pacByeHi8JCnP34wk7fBVJzyvURktAr3TdfcF"
 
 [registry]

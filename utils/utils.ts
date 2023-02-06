@@ -2,11 +2,10 @@ import { web3 } from '@project-serum/anchor'
 import {
   SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
   TOKEN_METADATA_PROGRAM_ID,
-  programId,
   KYCDAO_COLLECTION_KYC_SEED,
   KYCDAO_STATUS_KYC_SEED,
-  KYCDAO_AUTHMINT_KYC_SEED,
   KYCDAO_STATUS_SIZE,
+  KYCDAO_PROGRAM_ID,
 } from './constants'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { LAMPORTS_PER_SOL } from '@solana/web3.js'
@@ -46,7 +45,7 @@ export const getMetadata = async (
   mint: web3.PublicKey,
 ): Promise<web3.PublicKey> => {
   return (
-    await web3.PublicKey.findProgramAddress(
+    web3.PublicKey.findProgramAddressSync(
       [
         Buffer.from('metadata'),
         TOKEN_METADATA_PROGRAM_ID.toBuffer(),
@@ -56,13 +55,14 @@ export const getMetadata = async (
     )
   )[0]
 }
+
 /* Find the associated token account between mint*/
 export const getTokenWallet = async (
   wallet: web3.PublicKey,
   mint: web3.PublicKey,
 ) => {
   return (
-    await web3.PublicKey.findProgramAddress(
+    web3.PublicKey.findProgramAddressSync(
       [wallet.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
       SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
     )
@@ -73,31 +73,20 @@ export const getStatusId = async (
   receiver: web3.PublicKey,
 ) => {
   return (
-    await web3.PublicKey.findProgramAddress(
+    web3.PublicKey.findProgramAddressSync(
       [Buffer.from(KYCDAO_STATUS_KYC_SEED), receiver.toBuffer()],
-      programId,
+      KYCDAO_PROGRAM_ID,
     )
   )
 }
 
 export const getCollectionId = async () => {
   return (
-    await web3.PublicKey.findProgramAddress(
+    web3.PublicKey.findProgramAddressSync(
       [Buffer.from(KYCDAO_COLLECTION_KYC_SEED)],
-      programId,
+      KYCDAO_PROGRAM_ID,
     )
   )[0]    
-}
-
-export const getAuthMintId = async (
-  tokenAcct: web3.PublicKey,
-) => {
-  return (
-    await web3.PublicKey.findProgramAddress(
-      [Buffer.from(KYCDAO_AUTHMINT_KYC_SEED), tokenAcct.toBuffer()],
-      programId,
-    )
-  )[0]
 }
 
 //TODO: Pretty sure we don't want this... mantissa...hmmm

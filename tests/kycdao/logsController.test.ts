@@ -5,9 +5,9 @@ import {
   setProvider,
   AnchorProvider,
 } from '@project-serum/anchor'
-import { KycDao } from '../target/types/kyc_dao'
-import getPastEvents from '../scripts/getPastEvents'
-import findTransactionSignature from '../scripts/getTransactionSignatures'
+import { KycDao } from '../../target/types/kyc_dao'
+import getPastEvents from '../../scripts/getPastEvents'
+import findTransactionSignature from '../../scripts/getTransactionSignatures'
 import * as assert from 'assert'
 
 describe('tests', () => {

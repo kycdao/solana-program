@@ -43,6 +43,5 @@ pub struct KycDaoNftStatusData {
 
 /* seeds of the PDA, can be anything you want */
 /* remember to change them on the JS too (utils.ts file) */
-pub static KYCDAO_COLLECTION_KYC_SEED: &str = "KYCDAO_COLLECTION_KYC_SEED_2";
+pub static KYCDAO_COLLECTION_KYC_SEED: &str = "KYCDAO_COLLECTION_KYC_SEED";
 pub static KYCDAO_STATUS_KYC_SEED: &str = "KYCDAO_STATUS_KYC_SEED";
-pub static KYCDAO_AUTHMINT_KYC_SEED: &str = "KYCDAO_AUTHMINT_KYC_SEED_1";
