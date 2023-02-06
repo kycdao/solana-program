@@ -14,8 +14,8 @@ import {
   sendAndConfirmTransaction,
   sendAndConfirmRawTransaction,
 } from '@solana/web3.js'
-import idl from '../../target/idl/kyc_dao.json'
-import { KycDao } from '../../target/types/kyc_dao'
+import idl from '../../target/idl/ntnft.json'
+import { Ntnft } from '../../target/types/ntnft'
 import {
   MintLayout,
   TOKEN_PROGRAM_ID,
@@ -77,7 +77,7 @@ describe('tests', () => {
   */
 
   before(async () => {
-    const program = workspace.KycDao as Program<KycDao>
+    const program = workspace.KycDao as Program<Ntnft>
     const collectionId = await getCollectionId()
 
     try {
@@ -106,7 +106,7 @@ describe('tests', () => {
       console.log('Running code as BACKEND...')
 
       /* this is our lib.rs */
-      const program = workspace.KycDao as Program<KycDao>
+      const program = workspace.KycDao as Program<Ntnft>
 
       const collectionId = await getCollectionId()
 

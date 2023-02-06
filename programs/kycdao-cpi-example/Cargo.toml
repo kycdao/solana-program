@@ -17,4 +17,4 @@ default = []
 
 [dependencies]
 anchor-lang = "0.26.0"
-kyc_dao = { path = "../kyc_dao", features = ["cpi"]}
+kycdao_solana_ntnft = { path = "../ntnft", features = ["cpi"]}

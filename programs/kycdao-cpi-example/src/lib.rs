@@ -1,8 +1,8 @@
 use anchor_lang::{prelude::*, solana_program::system_program};
-use kyc_dao::cpi::has_valid_token;
-use kyc_dao::cpi::accounts::HasValidToken;
-use kyc_dao::program::KycDao;
-use kyc_dao::state::KycDaoNftStatus;
+use kycdao_solana_ntnft::cpi::has_valid_token;
+use kycdao_solana_ntnft::cpi::accounts::HasValidToken;
+use kycdao_solana_ntnft::program::Ntnft;
+use kycdao_solana_ntnft::state::KycDaoNftStatus;
 
 declare_id!("12ooNXAnRpGcTX1fHBWysVoSzHvmqxZqWy4EQj6PcNyv");
 
@@ -48,7 +48,7 @@ pub mod kycdao_cpi_example {
 #[derive(Accounts)]
 #[instruction(addr: Pubkey)]
 pub struct CheckAddress<'info> {
-    pub kycdao_program: Program<'info, KycDao>,
+    pub kycdao_program: Program<'info, Ntnft>,
     pub kycdao_status: Account<'info, KycDaoNftStatus>,
 }
 
@@ -58,7 +58,7 @@ pub struct AddNewMember<'info> {
     /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(mut)]
     pub receiver: AccountInfo<'info>,    
-    pub kycdao_program: Program<'info, KycDao>,
+    pub kycdao_program: Program<'info, Ntnft>,
     pub kycdao_status: Account<'info, KycDaoNftStatus>,
     #[account(
         init,
