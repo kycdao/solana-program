@@ -4,7 +4,6 @@ import {
   TOKEN_METADATA_PROGRAM_ID,
   KYCDAO_COLLECTION_KYC_SEED,
   KYCDAO_STATUS_KYC_SEED,
-  KYCDAO_STATUS_SIZE,
   KYCDAO_PROGRAM_ID,
 } from './constants'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
@@ -108,23 +107,6 @@ export const RECEIVER_WALLET = web3.Keypair.fromSecretKey(
   new Uint8Array(
     JSON.parse(
       fs.readFileSync(__dirname + '/keypairs/receiver-wallet.json').toString(),
-    ),
-  ),
-)
-
-/* Used for durable nonces, to ensure that the partialSign transaction does not expire */
-// Ensure you create your nonce account as below
-// NOTE: THIS MUST BE RUN AS THE BACKEND WALLET
-/*
-      solana-keygen new -o nonce-keypair.json
-      solana create-nonce-account nonce-keypair.json 1
-      solana nonce nonce-keypair.json
-      mv nonce-keypair.json utils/keypairs
-*/
-export const NONCE_ACCOUNT = web3.Keypair.fromSecretKey(
-  new Uint8Array(
-    JSON.parse(
-      fs.readFileSync(__dirname + '/keypairs/nonce-keypair.json').toString(),
     ),
   ),
 )

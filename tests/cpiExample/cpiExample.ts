@@ -7,60 +7,24 @@ import {
     BN,
   } from '@project-serum/anchor'
   import {
-    NonceAccount,
-    LAMPORTS_PER_SOL,
-    Connection,
-    Transaction,
     sendAndConfirmTransaction,
-    sendAndConfirmRawTransaction,
   } from '@solana/web3.js'
-  import idl from '../../target/idl/kyc_dao.json'
   import { KycDao } from '../../target/types/kyc_dao'
   import { KycdaoCpiExample } from '../../target/types/kycdao_cpi_example'
   import {
-    MintLayout,
-    TOKEN_PROGRAM_ID,
-    createInitializeMintInstruction,
-    createMintToInstruction,
-    createFreezeAccountInstruction,
-    createSetAuthorityInstruction,
-    AuthorityType,
-  } from '@solana/spl-token'
-  import {
-    TOKEN_METADATA_PROGRAM_ID,
-    PRICE_FEED,
-    KYCDAO_COLLECTION_KYC_SEED,
-    SECS_IN_YEAR,
-    KYCDAO_STATUS_SIZE,
     KYCDAO_PROGRAM_ID
   } from '../../utils/constants'
   import { ethers } from 'ethers'
   import {
-    createAssociatedTokenAccountInstruction,
-    getCollectionId,
     getStatusId,
-    getMetadata,
-    getTokenWallet,
-    BACKEND_WALLET,
     RECEIVER_WALLET,
-    NONCE_ACCOUNT,
-    parsePrice,
   } from '../../utils/utils'
-  import { createSignature } from '../../utils/ethSignature'
-  import getPastEvents from '../../scripts/getPastEvents'
-  import findTransactionSignature from '../../scripts/getTransactionSignatures'
-  import initializeCollection from '../../scripts/initializeCollection'
-  import updateCandyMachine from '../../scripts/updateCollection'
-  import updateStateMachine from '../../scripts/updateStateMachine'
   import getLogIncluding from '../../scripts/getLogIncluding'
-  import { expect } from 'chai'
-  import * as assert from 'assert'
   import * as dotenv from 'dotenv'
   dotenv.config()
 
-const { Keypair, SystemProgram, PublicKey, SYSVAR_RENT_PUBKEY } = web3
+const { SystemProgram } = web3
 
-const MEMBERSHIP_SEED = "MEMBERSHIP_SEED"
 let exampleProgram: Program<KycdaoCpiExample>
 let kycdaoProgram: Program<KycDao>
 
