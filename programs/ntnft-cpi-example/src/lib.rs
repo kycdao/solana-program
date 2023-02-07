@@ -9,7 +9,7 @@ declare_id!("12ooNXAnRpGcTX1fHBWysVoSzHvmqxZqWy4EQj6PcNyv");
 pub static MEMBERSHIP_SEED: &str = "MEMBERSHIP_SEED";
 
 #[program]
-pub mod kycdao_cpi_example {
+pub mod ntnft_cpi_example {
     use super::*;
 
     pub fn check_address(ctx: Context<CheckAddress>, addr: Pubkey) -> Result<bool> {

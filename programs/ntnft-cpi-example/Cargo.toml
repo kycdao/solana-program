@@ -1,12 +1,12 @@
 [package]
-name = "kycdao-cpi-example"
+name = "kycdao-solana-ntnft-cpi-example"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "kycdao_cpi_example"
+name = "kycdao_solana_ntnft_cpi_example"
 
 [features]
 no-entrypoint = []
