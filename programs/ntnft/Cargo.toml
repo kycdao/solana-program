@@ -1,5 +1,5 @@
 [package]
-name = "kycdao_solana_ntnft"
+name = "kycdao-solana-ntnft"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
