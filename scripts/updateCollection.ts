@@ -2,7 +2,7 @@ import { Program, web3, BN, Idl } from '@project-serum/anchor'
 import idl from '../target/idl/ntnft.json'
 import { MY_WALLET, parsePrice } from '../utils/utils'
 import { KYCDAO_COLLECTION_KYC_SEED, programId } from '../utils/constants'
-import { KycDao } from '../target/types/ntnft'
+import { Ntnft } from '../target/types/ntnft'
 import { ethers } from 'ethers'
 import * as dotenv from 'dotenv'
 dotenv.config()
@@ -11,7 +11,7 @@ const main = async (price: number, ethAddress?: string, signer?: any) => {
   const { PublicKey } = web3
   
   /* workspace */
-  const program = new Program(idl as Idl, programId) as Program<KycDao>
+  const program = new Program(idl as Idl, programId) as Program<Ntnft>
 
   /* ethereum address settings */
   const eth_signer: ethers.Wallet = new ethers.Wallet(

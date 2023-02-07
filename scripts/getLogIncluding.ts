@@ -2,7 +2,7 @@ import * as anchor from '@project-serum/anchor'
 import { web3 } from '@project-serum/anchor'
 import { Finality, SignaturesForAddressOptions } from '@solana/web3.js'
 
-const getLogInluding = async <T extends anchor.Idl>(
+const getLogIncluding = async <T extends anchor.Idl>(
   inclusionString: string,
   program: anchor.Program<T>,
   transaction: string,
@@ -63,4 +63,4 @@ const getLogInluding = async <T extends anchor.Idl>(
   return events
 }
 
-export default getLogInluding
+export default getLogIncluding

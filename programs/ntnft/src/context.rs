@@ -5,14 +5,7 @@ use crate::state::*;
 use {
     anchor_lang::{prelude::*, solana_program::system_program},
     mpl_token_metadata,
-    solana_program::sysvar::instructions::ID as IX_ID,
 };
-
-#[derive(Accounts)]
-pub struct HasValidToken<'info> {
-    #[account()]
-    pub status: Account<'info, KycDaoNftStatus>,
-}
 
 #[derive(Accounts)]
 pub struct MintWithArgs<'info> {
@@ -69,137 +62,6 @@ pub struct MintWithArgs<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-#[derive(Accounts)]
-pub struct MintWithCode<'info> {
-    #[account(
-        mut, 
-        has_one=wallet,
-        seeds=[KYCDAO_COLLECTION_KYC_SEED.as_bytes()],
-        bump,        
-    )]
-    pub collection: Account<'info, KycDaoNftCollection>,
-    // CHECK: This is not dangerous because we don't read or write from this account
-    #[account(
-        init, 
-        seeds=[KYCDAO_STATUS_KYC_SEED.as_bytes(), &mint.key.to_bytes()],
-        bump,
-        payer=fee_payer,
-        //TODO: Will need to revisit this space calc
-        space =
-            8  +  // < discriminator   
-            1  +  // pub is_valid: bool,
-            8  +  // pub expiry: u64,
-            64    // pub verification_tier: String (?),    
-    )]
-    pub status: Account<'info, KycDaoNftStatus>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(
-        seeds=[KYCDAO_AUTHMINT_KYC_SEED.as_bytes(), &associated_account.key.to_bytes()],
-        bump,
-    )]
-    pub kycdao_nft_authmint: Account<'info, KycDaoNftAuthMint>,          
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(mut)]
-    pub wallet: AccountInfo<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(mut)]
-    pub metadata: AccountInfo<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(mut)]
-    pub mint: AccountInfo<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(mut)]
-    pub associated_account: AccountInfo<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(mut, signer)]
-    pub mint_authority: AccountInfo<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(mut, signer)]
-    pub fee_payer: AccountInfo<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    // #[account(signer)]
-    // pub payer: Signer<'info>,
-    /// CHECK: pyth oracle account
-    /// TODO: We need to ensure we have the right price_feed, store in the collection?
-    #[account(mut)]
-    pub price_feed: UncheckedAccount<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(address = spl_token::id())]
-    pub token_program: AccountInfo<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(address = mpl_token_metadata::id())]
-    pub token_metadata_program: AccountInfo<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(address = system_program::ID)]
-    pub system_program: AccountInfo<'info>,
-    pub rent: Sysvar<'info, Rent>,
-}
-
-#[derive(Accounts)]
-pub struct MintWithSignature<'info> {
-    #[account(
-        mut, 
-        has_one=wallet,
-        // seeds=[KYCDAO_COLLECTION_KYC_SEED.as_bytes()],
-        // bump,        
-    )]
-    pub collection: Account<'info, KycDaoNftCollection>,
-    //TODO: Need to look at status handling afterwards
-    // CHECK: This is not dangerous because we don't read or write from this account
-    #[account(
-        // mut,
-        // TODO: Need to enforce the seeds here
-        init, 
-        seeds=[KYCDAO_STATUS_KYC_SEED.as_bytes(), &mint.key.to_bytes()],
-        bump,
-        payer=fee_payer,
-        //TODO: Will need to revisit this space calc
-        space =
-            8  +  // < discriminator   
-            1  +  // pub is_valid: bool,
-            8  +  // pub expiry: u64,
-            64    // pub verification_tier: String (?),    
-    )]
-    pub status: Account<'info, KycDaoNftStatus>,      
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(mut)]
-    pub wallet: AccountInfo<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(mut)]
-    pub metadata: AccountInfo<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(mut)]
-    pub mint: AccountInfo<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(mut)]
-    pub associated_account: AccountInfo<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(mut)]
-    pub mint_authority: AccountInfo<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(mut, signer)]
-    pub fee_payer: AccountInfo<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    // #[account(signer)]
-    // pub payer: Signer<'info>,
-    /// CHECK: pyth oracle account
-    #[account(mut)]
-    pub price_feed: UncheckedAccount<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(address = spl_token::id())]
-    pub token_program: AccountInfo<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(address = mpl_token_metadata::id())]
-    pub token_metadata_program: AccountInfo<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(address = system_program::ID)]
-    pub system_program: AccountInfo<'info>,
-    pub rent: Sysvar<'info, Rent>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(address = IX_ID)]
-    pub ix_sysvar: AccountInfo<'info>,
-}
-
 /* derived account initialization */
 
 /*
@@ -219,83 +81,6 @@ pub struct MintWithSignature<'info> {
 
     `seeds` and `bump` tell us that our `kycdao_nft_collection` is a PDA that can be derived from their respective values
 */
-
-//TODO: Don't think we want an init status instruction
-// #[derive(Accounts)]
-// pub struct InitializeKycDAONFTStatus<'info> {
-//     #[account(
-//         init, 
-//         payer = payer, 
-//         space =     8  +  // < discriminator (from Anchor?)
-//                     1  +  // < is_valid
-//                     32 +  // < authority
-//                     32    // < associated_account
-//     )]
-//     pub data: Account<'info, Data>,
-//     pub candy_machine: Account<'info, CandyMachine>,
-//     #[account(mut)]
-//     pub payer: Signer<'info>,
-//     /// CHECK: This is not dangerous because we don't read or write from this account
-//     pub authority: AccountInfo<'info>,
-//     pub system_program: Program<'info, System>
-// }
-
-#[derive(Accounts)]
-#[instruction(data: KycDaoNftAuthMintData)]
-pub struct InitializeKycDAONFTAuthMint<'info> {
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account()]
-    pub associated_account: AccountInfo<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(
-        init,
-        seeds=[KYCDAO_AUTHMINT_KYC_SEED.as_bytes(), &associated_account.key.to_bytes()],
-        payer = authority,
-        bump,
-        //TODO: Need to check this space calc, probably use it dynamically
-        space =
-            8  +  // < discriminator
-            8  + // pub expiry: u64,
-            8  + // pub seconds_to_pay: u64,
-            64 + // pub metadata_cid: String, (IPFS Hash)
-            64 + // pub verification_tier: String, (?)           
-            32    // < extra - remove later
-    )]
-    pub kycdao_nft_authmint: Account<'info, KycDaoNftAuthMint>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(
-        has_one = authority,
-        seeds=[KYCDAO_COLLECTION_KYC_SEED.as_bytes()],
-        bump,
-    )]
-    pub collection: Account<'info, KycDaoNftCollection>,    
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    /// TODO: Why do we need the constraint check on authority here?
-    #[account(mut, signer)]
-    pub authority: AccountInfo<'info>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(address = system_program::ID)]
-    pub system_program: AccountInfo<'info>,
-}
-
-#[derive(Accounts)]
-//TODO: When is bump required?
-// #[instruction(bump: u8, data: KycDaoNftStatusData)]
-pub struct UpdateKycDAONFTStatus<'info> {
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(
-        has_one = authority,
-        seeds=[KYCDAO_COLLECTION_KYC_SEED.as_bytes()],
-        bump,
-    )]
-    pub collection: Account<'info, KycDaoNftCollection>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(mut)]
-    pub status: Account<'info, KycDaoNftStatus>,
-    /// CHECK: This is not dangerous because we don't read or write from this account
-    #[account(signer)]
-    pub authority: AccountInfo<'info>,
-}
 
 #[derive(Accounts)]
 //TODO: When is bump required?
@@ -331,6 +116,25 @@ pub struct InitializeKycDAONFTStatus<'info> {
     /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,    
+}
+
+#[derive(Accounts)]
+//TODO: When is bump required?
+// #[instruction(bump: u8, data: KycDaoNftStatusData)]
+pub struct UpdateKycDAONFTStatus<'info> {
+    /// CHECK: This is not dangerous because we don't read or write from this account
+    #[account(
+        has_one = authority,
+        seeds=[KYCDAO_COLLECTION_KYC_SEED.as_bytes()],
+        bump,
+    )]
+    pub collection: Account<'info, KycDaoNftCollection>,
+    /// CHECK: This is not dangerous because we don't read or write from this account
+    #[account(mut)]
+    pub status: Account<'info, KycDaoNftStatus>,
+    /// CHECK: This is not dangerous because we don't read or write from this account
+    #[account(signer)]
+    pub authority: AccountInfo<'info>,
 }
 
 #[derive(Accounts)]
@@ -380,6 +184,16 @@ pub struct UpdateKycDAONFTCollection<'info> {
     /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(signer)]
     pub authority: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+#[instruction(addr: Pubkey)]
+pub struct HasValidToken<'info> {
+    #[account(
+        seeds=[KYCDAO_STATUS_KYC_SEED.as_bytes(), addr.as_ref()],
+        bump,
+    )]
+    pub status: Account<'info, KycDaoNftStatus>,
 }
 
 /* rent table */

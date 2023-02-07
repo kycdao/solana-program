@@ -5,9 +5,9 @@ import {
   setProvider,
   AnchorProvider,
 } from '@project-serum/anchor'
-import { KycDao } from '../target/types/ntnft'
-import getPastEvents from '../scripts/getPastEvents'
-import findTransactionSignature from '../scripts/getTransactionSignatures'
+import { Ntnft } from '../../target/types/ntnft'
+import getPastEvents from '../../scripts/getPastEvents'
+import findTransactionSignature from '../../scripts/getTransactionSignatures'
 import * as assert from 'assert'
 
 describe('tests', () => {
@@ -15,7 +15,7 @@ describe('tests', () => {
 
   /* Log related */
   // it('Get oldest account transaction signature and information', async () => {
-  //   const program = workspace.KycDao as Program<KycDao>
+  //   const program = workspace.Ntnft as Program<Ntnft>
   //   // connection must have confirmed status to call getSignaturesForAddress
   //   let connection = new web3.Connection(
   //     web3.clusterApiUrl('devnet'),
@@ -29,7 +29,7 @@ describe('tests', () => {
   // })
 
   // it('Get all transaction signatures made while interaction with this program', async () => {
-  //   const program = workspace.KycDao as Program<KycDao>
+  //   const program = workspace.Ntnft as Program<Ntnft>
   //   // connection must have confirmed status to call getSignaturesForAddress
   //   let connection = new web3.Connection(
   //     web3.clusterApiUrl('devnet'),
@@ -42,7 +42,7 @@ describe('tests', () => {
   // })
 
   // it('Get all past events logs of this program', async () => {
-  //   const program = workspace.KycDao as Program<KycDao>
+  //   const program = workspace.Ntnft as Program<Ntnft>
   //   const events = await getPastEvents(program)
   //   console.log(events)
   // })

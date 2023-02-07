@@ -41,27 +41,7 @@ pub struct KycDaoNftStatusData {
     pub verification_tier: String,        
 }
 
-#[account]
-#[derive(Default)]
-pub struct KycDaoNftAuthMint {
-    pub data: KycDaoNftAuthMintData,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default, PartialEq)]
-pub struct KycDaoNftAuthMintData {
-    pub expiry: u64,
-    pub seconds_to_pay: u64,
-    pub metadata_cid: String,
-    pub verification_tier: String,
-}
-
 /* seeds of the PDA, can be anything you want */
 /* remember to change them on the JS too (utils.ts file) */
-pub static KYCDAO_COLLECTION_KYC_SEED: &str = "KYCDAO_COLLECTION_KYC_SEED_2";
+pub static KYCDAO_COLLECTION_KYC_SEED: &str = "KYCDAO_COLLECTION_KYC_SEED";
 pub static KYCDAO_STATUS_KYC_SEED: &str = "KYCDAO_STATUS_KYC_SEED";
-pub static KYCDAO_AUTHMINT_KYC_SEED: &str = "KYCDAO_AUTHMINT_KYC_SEED_1";
-
-// pub static CANDY_PREFIX: &str = "0LZ3DI4S2B";
-// pub static CANDY_SUFIX: &str = "0LZ3DI4S2C";
-// pub static STATE_PREFIX: &str = "F96G8971BA36F5G4";
-// pub static STATE_SUFIX: &str = "F96G8971BA36F5G4";

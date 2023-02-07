@@ -2,9 +2,9 @@ import { Program, web3, workspace, BN } from '@project-serum/anchor'
 import idl from '../target/idl/ntnft.json'
 import { BACKEND_WALLET, parsePrice } from '../utils/utils'
 import { KYCDAO_COLLECTION_KYC_SEED, SUBSCRIPTION_COST_DECIMALS } from '../utils/constants'
-import { KycDao } from '../target/types/ntnft'
+import { Ntnft } from '../target/types/ntnft'
 import { ethers } from 'ethers'
-import getLogInluding from './getLogInluding'
+import getLogIncluding from './getLogIncluding'
 import * as dotenv from 'dotenv'
 dotenv.config()
 
@@ -14,7 +14,7 @@ const main = async () => {
   const { SystemProgram, PublicKey } = web3
 
   /* lib */
-  const program = workspace.KycDao as Program<KycDao>
+  const program = workspace.Ntnft as Program<Ntnft>
 
   /* ethereum wallet settings */
   const eth_signer: ethers.Wallet = new ethers.Wallet(
