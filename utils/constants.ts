@@ -1,6 +1,6 @@
 import { web3, workspace, Program, AnchorProvider, setProvider } from '@project-serum/anchor'
 import { PublicKey } from '@solana/web3.js'
-import { KycDao } from '../target/types/kyc_dao'
+import { Ntnft } from '../target/types/ntnft'
 
 export const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new PublicKey(
   'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
@@ -39,6 +39,6 @@ export const KYCDAO_STATUS_SIZE = 8  +  // < discriminator
 // If setProvider is not called, the program will not be able to find the programId
 // and you'll get REALLY cryptic errors
 setProvider(AnchorProvider.env())
-const kycdaoProgram = workspace.KycDao as Program<KycDao>
+const kycdaoProgram = workspace.Ntnft as Program<Ntnft>
 export const KYCDAO_PROGRAM_ID = kycdaoProgram.programId
 

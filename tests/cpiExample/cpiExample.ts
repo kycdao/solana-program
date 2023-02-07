@@ -9,7 +9,7 @@ import {
   import {
     sendAndConfirmTransaction,
   } from '@solana/web3.js'
-  import { KycDao } from '../../target/types/kyc_dao'
+  import { Ntnft } from '../../target/types/ntnft'
   import { KycdaoCpiExample } from '../../target/types/kycdao_cpi_example'
   import {
     KYCDAO_PROGRAM_ID
@@ -26,7 +26,7 @@ import {
 const { SystemProgram } = web3
 
 let exampleProgram: Program<KycdaoCpiExample>
-let kycdaoProgram: Program<KycDao>
+let kycdaoProgram: Program<Ntnft>
 
 describe('tests', () => {
   setProvider(AnchorProvider.env())
@@ -41,7 +41,7 @@ describe('tests', () => {
       console.log("Running checkAddress test...")
 
       exampleProgram = workspace.KycdaoCpiExample as Program<KycdaoCpiExample>
-      kycdaoProgram = workspace.KycDao as Program<KycDao>
+      kycdaoProgram = workspace.Ntnft as Program<Ntnft>
   
       const [statusId, _bump] = await getStatusId(RECEIVER_WALLET.publicKey)
 

@@ -57,7 +57,7 @@ describe('tests', () => {
   */
 
   before(async () => {
-    const program = workspace.KycDao as Program<Ntnft>
+    const program = workspace.Ntnft as Program<Ntnft>
     const collectionId = await getCollectionId()
 
     try {
@@ -86,7 +86,7 @@ describe('tests', () => {
       console.log('Running code as BACKEND...')
 
       /* this is our lib.rs */
-      const program = workspace.KycDao as Program<Ntnft>
+      const program = workspace.Ntnft as Program<Ntnft>
 
       const collectionId = await getCollectionId()
 
