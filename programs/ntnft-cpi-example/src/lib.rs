@@ -4,7 +4,7 @@ use kycdao_solana_ntnft::cpi::accounts::HasValidToken;
 use kycdao_solana_ntnft::program::Ntnft;
 use kycdao_solana_ntnft::state::KycDaoNftStatus;
 
-declare_id!("12ooNXAnRpGcTX1fHBWysVoSzHvmqxZqWy4EQj6PcNyv");
+declare_id!("BzFJNF15upSmJ5KWRjR4yy4jbu1asyzDoWJRniFqn15o");
 
 pub static MEMBERSHIP_SEED: &str = "MEMBERSHIP_SEED";
 

@@ -68,7 +68,9 @@ describe('tests', () => {
       console.log('Collection found!')
     } catch (err) {
       console.log('Collection not found, initializing...')
-      await initializeCollection()
+      if (!await initializeCollection()) {
+        throw new Error('Collection failed to initialize')
+      }
     }    
   }),
 

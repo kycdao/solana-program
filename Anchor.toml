@@ -3,11 +3,11 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-ntnft = "3j93ny9pacByeHi8JCnP34wk7fBVJzyvURktAr3TdfcF"
+ntnft = "2Z58CEDXZTCHUsQ7vMYfiXuHo2DJmK9wHXVUGKmNMohn"
 
 [programs.devnet]
-ntnft_cpi_example = "12ooNXAnRpGcTX1fHBWysVoSzHvmqxZqWy4EQj6PcNyv"
-ntnft = "3j93ny9pacByeHi8JCnP34wk7fBVJzyvURktAr3TdfcF"
+ntnft_cpi_example = "BzFJNF15upSmJ5KWRjR4yy4jbu1asyzDoWJRniFqn15o"
+ntnft = "2Z58CEDXZTCHUsQ7vMYfiXuHo2DJmK9wHXVUGKmNMohn"
 
 [registry]
 url = "https://anchor.projectserum.com"

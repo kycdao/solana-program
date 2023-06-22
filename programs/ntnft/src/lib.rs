@@ -10,7 +10,7 @@ pub mod error;
 pub mod state;
 pub mod verify_signature;
 
-declare_id!("3j93ny9pacByeHi8JCnP34wk7fBVJzyvURktAr3TdfcF");
+declare_id!("2Z58CEDXZTCHUsQ7vMYfiXuHo2DJmK9wHXVUGKmNMohn");
 
 #[program]
 pub mod ntnft {

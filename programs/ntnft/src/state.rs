@@ -11,7 +11,6 @@ pub struct KycDaoNftCollection {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default, PartialEq)]
 pub struct KycDaoNftCollectionData {
-    pub eth_signer: [u8; 20],
     pub price_per_year: u64,
     pub nfts_minted: u64,
     pub symbol: String,

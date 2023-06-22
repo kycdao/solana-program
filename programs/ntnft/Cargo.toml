@@ -16,10 +16,16 @@ cpi = ["no-entrypoint"]
 default = []
  
 [dependencies]
-anchor-lang = "0.26"
-anchor-spl = "0.26"
-spl-token = { version = "3.1.1", features = [ "no-entrypoint" ] }
+# We have to pin a bunch of (unrelated) deps atm because Anchor has issues
+# Issue when using Solana CLI 1.14: https://solana.stackexchange.com/questions/6526/error-package-winnow-v0-4-4-cannot-be-built-because-it-requires-rustc-1-64-0
+# Issue when using Solana CLI 1.16: https://github.com/coral-xyz/anchor/issues/2520
+anchor-lang = "0.27.0"
+anchor-spl = "0.27.0"
+getrandom = { version = "0.2.9", features = ["custom"] }
+solana-program = "=1.14.17"
+winnow = "=0.4.1"
+toml_datetime = "=0.6.1"
 pyth-sdk-solana = "0.7.0"
-solana-program = "^1.13.5"
-solana-safe-math = "0.1.0"
 mpl-token-metadata = { version = "1.4.3", features = ["no-entrypoint"] }
+spl-token = { version = "3.1.1", features = [ "no-entrypoint" ] }
+solana-safe-math = "0.1.0"

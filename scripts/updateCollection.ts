@@ -1,7 +1,6 @@
-import { Program, web3, BN, Idl } from '@project-serum/anchor'
-import idl from '../target/idl/ntnft.json'
-import { MY_WALLET, parsePrice } from '../utils/utils'
-import { KYCDAO_COLLECTION_KYC_SEED, programId } from '../utils/constants'
+import { Program, web3, BN, workspace } from '@project-serum/anchor'
+import { BACKEND_WALLET, parsePrice } from '../utils/utils'
+import { KYCDAO_COLLECTION_KYC_SEED, KYCDAO_PROGRAM_ID } from '../utils/constants'
 import { Ntnft } from '../target/types/ntnft'
 import { ethers } from 'ethers'
 import * as dotenv from 'dotenv'
@@ -11,7 +10,7 @@ const main = async (price: number, ethAddress?: string, signer?: any) => {
   const { PublicKey } = web3
   
   /* workspace */
-  const program = new Program(idl as Idl, programId) as Program<Ntnft>
+  const program = workspace.Ntnft as Program<Ntnft>
 
   /* ethereum address settings */
   const eth_signer: ethers.Wallet = new ethers.Wallet(
@@ -29,7 +28,7 @@ const main = async (price: number, ethAddress?: string, signer?: any) => {
   /* calculates the program address using seeds from 'constants.ts'*/
   const [kycdaoNFTCollectionId, bump] = await PublicKey.findProgramAddress(
     [Buffer.from(KYCDAO_COLLECTION_KYC_SEED)],
-    new PublicKey(idl.metadata.address),
+    KYCDAO_PROGRAM_ID,
   )
 
   /* update collection */
@@ -45,10 +44,10 @@ const main = async (price: number, ethAddress?: string, signer?: any) => {
     {
       accounts: {
         kycdaoNftCollection: kycdaoNFTCollectionId,
-        wallet: MY_WALLET.publicKey, // who will receive the SOL of each mint
-        authority: MY_WALLET.publicKey,
+        wallet: BACKEND_WALLET.publicKey, // who will receive the SOL of each mint
+        authority: BACKEND_WALLET.publicKey,
       },
-      signers: [MY_WALLET],
+      signers: [BACKEND_WALLET],
     },
   )
   console.log('Transaction signature:', tx)

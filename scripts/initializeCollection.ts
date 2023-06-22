@@ -1,10 +1,7 @@
 import { Program, web3, workspace, BN } from '@project-serum/anchor'
-import idl from '../target/idl/ntnft.json'
 import { BACKEND_WALLET, parsePrice } from '../utils/utils'
-import { KYCDAO_COLLECTION_KYC_SEED, SUBSCRIPTION_COST_DECIMALS } from '../utils/constants'
+import { KYCDAO_COLLECTION_KYC_SEED, SUBSCRIPTION_COST_DECIMALS, KYCDAO_PROGRAM_ID } from '../utils/constants'
 import { Ntnft } from '../target/types/ntnft'
-import { ethers } from 'ethers'
-import getLogIncluding from './getLogIncluding'
 import * as dotenv from 'dotenv'
 dotenv.config()
 
@@ -16,53 +13,51 @@ const main = async () => {
   /* lib */
   const program = workspace.Ntnft as Program<Ntnft>
 
-  /* ethereum wallet settings */
-  const eth_signer: ethers.Wallet = new ethers.Wallet(
-    process.env.ETH_PRIVATE_KEY,
-    ethers.getDefaultProvider(),
-  )
-  const eth_address = ethers.utils.computeAddress(eth_signer.publicKey).slice(2)
-
   /* calculates the program address using seeds from 'constants.ts'*/
   const [kycdaoNFTCollectionId, bump] = await PublicKey.findProgramAddress(
     [Buffer.from(KYCDAO_COLLECTION_KYC_SEED)],
-    new PublicKey(idl.metadata.address),
+    KYCDAO_PROGRAM_ID,
   )
 
   console.log('\nStarting tx...\n')
 
+  const args = {
+    pricePerYear: new BN(5 * SUBSCRIPTION_COST_DECIMALS), // subscription cost in USD
+    nftsMinted: new BN(0),
+    symbol: 'KYC',
+    name: 'KYCDAO NFT',
+    baseUrl: 'https://ipfs.io/ipfs/',
+
+    //TODO: Can we get a type for the collection here?
+  } as any
+  
   /* initialize collection */
-  const tx = await program.rpc.initializeKycdaonftCollection(
-    bump,
-    {
-      ethSigner: ethers.utils.arrayify('0x' + eth_address),
-      pricePerYear: new BN(5 * SUBSCRIPTION_COST_DECIMALS), // subscription cost in USD
-      nftsMinted: new BN(0),
-      symbol: 'KYC',
-      name: 'KYCDAO NFT',
-      baseUrl: 'https://ipfs.io/ipfs/',
+  try {
+    const tx = await program.methods.initializeKycdaonftCollection(
+      bump,
+      args,
+    )
+    .accounts({
+      kycdaoNftCollection: kycdaoNFTCollectionId,
+      wallet: BACKEND_WALLET.publicKey, // who will receive the SOL of each mint
+      authority: BACKEND_WALLET.publicKey,
+      systemProgram: SystemProgram.programId,
+    })
+    .signers([BACKEND_WALLET])
+    .transaction()
+    
+    // send tx
+    const txHash = await program.provider.sendAndConfirm(tx)
 
-      // sellerFeeBasisPoints: 500, // 500 = 5%
-      // maxSupply: new BN(48),
-      // creators: [{ address: MY_WALLET.publicKey, verified: true, share: 100 }],
-      //TODO: Can we get a type for the collection here?
-    } as any,
-    {
-      accounts: {
-        kycdaoNftCollection: kycdaoNFTCollectionId,
-        wallet: BACKEND_WALLET.publicKey, // who will receive the SOL of each mint
-        authority: BACKEND_WALLET.publicKey,
-        systemProgram: SystemProgram.programId,
-      },
-      signers: [BACKEND_WALLET],
-    },
-  )
+    if (!tx) {
+      return false
+    }
 
-  if (!tx) {
+    console.log('\nThe transaction txHash:\n', txHash)
+  } catch (err) {
+    console.log('\nError:\n', err)
     return false
   }
-
-  console.log('\nThe transaction tx:\n', tx)
 
   // Fetch data from the new account
   const kycdaoNFTCollectionState = await program.account.kycDaoNftCollection.fetch(
