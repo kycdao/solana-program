@@ -9,11 +9,14 @@ ntnft = "2Z58CEDXZTCHUsQ7vMYfiXuHo2DJmK9wHXVUGKmNMohn"
 ntnft_cpi_example = "BzFJNF15upSmJ5KWRjR4yy4jbu1asyzDoWJRniFqn15o"
 ntnft = "2Z58CEDXZTCHUsQ7vMYfiXuHo2DJmK9wHXVUGKmNMohn"
 
+[programs.mainnet]
+ntnft = "2eDJYtAPuD7tN4bwqwebKN5GRPxRTkVPD1pK4w2MAJnF"
+
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
+cluster = "mainnet"
 wallet = "./utils/keypairs/my-wallet.json"
 
 [scripts]
